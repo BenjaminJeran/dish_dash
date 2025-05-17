@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'pages/auth/login_screen.dart';
-import 'pages/auth/register_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,11 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Recipe App',
       theme: ThemeData(primarySwatch: Colors.green),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-      },
+      home: const LoginScreen(), // Start here
     );
   }
 }
