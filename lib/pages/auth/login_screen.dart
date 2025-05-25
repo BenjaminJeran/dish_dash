@@ -1,5 +1,7 @@
+// lib/pages/auth/login_screen.dart
 import 'package:flutter/material.dart';
-import 'register_screen.dart';
+import 'package:dish_dash/pages/auth/register_screen.dart';
+import 'package:dish_dash/pages/main_tab_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -7,7 +9,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Prijava')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -16,20 +18,34 @@ class LoginScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: const InputDecoration(labelText: 'E-pošta'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  decoration: const InputDecoration(labelText: 'Geslo'),
                   obscureText: true,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    // Add login logic here
+                    // Navigate to the MainTabScreen after login
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MainTabScreen(),
+                      ),
+                    );
+                    print('Login button pressed (navigating to MainTabScreen)');
                   },
-                  child: const Text('Login'),
+                  child: const Text('Prijava'),
                 ),
+                const SizedBox(height: 12),
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).push(
@@ -38,7 +54,7 @@ class LoginScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text("Don't have an account? Register"),
+                  child: const Text("Nimate računa? Registracija"),
                 ),
               ],
             ),
