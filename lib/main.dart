@@ -1,4 +1,3 @@
-import 'package:dish_dash/pages/recipes/create_recipe_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/colors/app_colors.dart';
@@ -91,6 +90,7 @@ class MyApp extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(
               vertical: 15,
+              horizontal: 20,
             ), // Consistent button padding
             textStyle: const TextStyle(
               fontSize: 18,
