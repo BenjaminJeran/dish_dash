@@ -155,12 +155,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             Navigator.pop(context); // Go back to the previous screen
           },
         ),
-        title: Center(
-          child: Image.asset(
-            'assets/logo.png', // Replace with your actual logo asset path
-            height: 40, // Adjust height as needed based on your logo size
-          ),
-        ),
+        title: Center(child: Image.asset('assets/logo.png', height: 80)),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
@@ -219,7 +214,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   'Sestavine (vsako v svojo vrstico)', // "Ingredients (each on its own line)"
               keyboardType: TextInputType.multiline,
               maxLines: null,
-              minLines: 8, // Adjust min lines for ingredients
+              minLines: 4, // Adjust min lines for ingredients
             ),
             const SizedBox(height: 20),
 
@@ -321,85 +316,34 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             const SizedBox(height: 30),
 
             // "Add Recipe" Button
-            Container(
-              width: double.infinity, // Full width button
-              height: 50, // Fixed height for the button
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                gradient: const LinearGradient(
-                  // Gradient background for the button
-                  colors: [
-                    AppColors.lime, // Lighter green
-                    AppColors.leafGreen, // Darker green
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
+            ElevatedButton(
+              onPressed: _addRecipe,
+              style: ElevatedButton.styleFrom(
+                // Remove backgroundColor: Colors.transparent
+                // Remove shadowColor: Colors.transparent
+                // Remove padding: EdgeInsets.zero
+                // The theme will handle these now!
+                minimumSize: const Size(
+                  double.infinity,
+                  50,
+                ), // Ensures full width and fixed height
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: ElevatedButton(
-                onPressed: _addRecipe,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors
-                          .transparent, // Make button transparent to show gradient
-                  shadowColor: Colors.transparent, // No shadow
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: EdgeInsets.zero, // Remove default padding
-                ),
-                child: const Text(
-                  'Dodaj recept', // "Add recipe" in Slovenian
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              child: const Text(
+                'Dodaj recept',
+                style: TextStyle(
+                  color:
+                      AppColors
+                          .white, // Keep text color white if that's your design
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ],
         ),
-      ),
-      // --- Bottom Navigation Bar ---
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex:
-            1, // You'll need to set this dynamically based on the current screen
-        onTap: (index) {
-          // TODO: Implement navigation logic for bottom bar items
-          // This should navigate to your main screens (Home, Explore, Recipes List)
-          // Use Navigator.pushReplacementNamed to replace the current screen,
-          // or Navigator.pop() and then Navigator.pushNamed if you want to pop
-          // this screen off the stack first.
-          print('Bottom nav item tapped: $index');
-          if (index == 0) {
-            // Navigator.pushReplacementNamed(context, '/home');
-          } else if (index == 1) {
-            // This might be the 'Add Recipe' screen itself, or 'Explore'
-            // If it's this screen, you don't need to navigate.
-            // If it's 'Explore', then:
-            // Navigator.pushReplacementNamed(context, '/explore');
-          } else if (index == 2) {
-            // Navigator.pushReplacementNamed(context, '/recipes_list');
-          }
-        },
-        selectedItemColor: AppColors.leafGreen, // Your primary green color
-        unselectedItemColor: AppColors.dimGray,
-        backgroundColor:
-            AppColors.white, // Assuming a white background for the nav bar
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.search,
-            ), // Changed from Restaurant to Search based on typical social media pattern
-            label: 'Explore',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book), // More recipe-specific icon
-            label: 'Moji recepti', // My Recipes
-          ),
-        ],
       ),
     );
   }
