@@ -44,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _controller.dispose(); // Always dispose your controllers
+   // _controller.dispose(); // Me odkomentirat tega, ko bo crknalno :D 
     super.dispose();
   }
 
