@@ -1,4 +1,3 @@
-// pages/auth/reset_password_screen.dart
 import 'package:flutter/material.dart';
 
 class ResetPasswordScreen extends StatelessWidget {
@@ -11,7 +10,14 @@ class ResetPasswordScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ponastavi geslo'), // "Reset Password"
+        title: Image.asset(
+          'assets/logo.png',
+          height: 93,
+          width: 93,
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -22,6 +28,15 @@ class ResetPasswordScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
+                  'Pozabljeno geslo?',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                const Text(
                   'Vnesite svoj e-poštni naslov za prejem povezave za ponastavitev gesla.',
                   style: TextStyle(fontSize: 16),
                   textAlign: TextAlign.center,
@@ -31,6 +46,8 @@ class ResetPasswordScreen extends StatelessWidget {
                   controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'E-pošta',
+                    border: OutlineInputBorder(),
+                    floatingLabelBehavior: FloatingLabelBehavior.auto,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
