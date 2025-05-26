@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/pages/onboarding_screen.dart'; // Import your onboarding screen
+import 'package:dish_dash/pages/splash_screen.dart'; // Import your splash screen
 
 void main() {
   runApp(const MyApp());
@@ -121,7 +122,8 @@ class MyApp extends StatelessWidget {
 
         useMaterial3: true, // Enable Material 3 design features
       ),
-      home: const OnboardingScreen(), // Your app starts with the LoginScreen
+      //home: const OnboardingScreen(),
+      home: const SplashScreen(), // Your app starts with the LoginScreen
       // For now, we keep MaterialPageRoute navigation, but keep GoRouter in mind for later!
     );
   }
