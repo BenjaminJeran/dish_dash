@@ -1,3 +1,4 @@
+import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/colors/app_colors.dart';
