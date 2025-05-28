@@ -1,4 +1,5 @@
 // lib/pages/home/home_content_screen.dart
+import 'package:dish_dash/pages/profile_page_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Import custom colors
 
@@ -27,8 +28,12 @@ class HomeContentScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              // TODO: Navigate to Profile screen
-              print('Profile icon pressed');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePageScreen(),
+                ),
+              );
             },
           ),
         ],
