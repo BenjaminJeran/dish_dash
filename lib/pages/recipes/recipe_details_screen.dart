@@ -5,25 +5,47 @@ import 'package:dish_dash/pages/profile_page_screen.dart'; // For the profile ic
 import 'package:dish_dash/pages/recipes/shopping_list_screen.dart'; // To add items to shopping list
 
 class RecipeDetailsScreen extends StatelessWidget {
-  final Recipe recipe; // The recipe object to display
+  final Recipe recipe;
 
   const RecipeDetailsScreen({super.key, required this.recipe});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Center(child: Image.asset('assets/logo.png', height: 80)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePageScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.charcoal,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          bottom: 20.0,
-        ), // Padding for the bottom buttons
+        padding: const EdgeInsets.only(bottom: 20.0, top: 10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Recipe Image with Favorite Icon
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(20),
                   child: Image.asset(
                     recipe.imageUrl,
                     width: double.infinity,
@@ -41,13 +63,11 @@ class RecipeDetailsScreen extends StatelessWidget {
                     ),
                     child: IconButton(
                       icon: Icon(
-                        Icons
-                            .favorite_border, // Or Icons.favorite if already favorited
+                        Icons.favorite_border,
                         color: AppColors.tomatoRed,
                       ),
                       onPressed: () {
                         print('Favorite button pressed for ${recipe.name}');
-                        // TODO: Implement favorite/unfavorite logic
                       },
                     ),
                   ),
@@ -158,7 +178,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  // "Uredi" (Edit) Button
+                  // Uredi Button
                   Center(
                     child: ElevatedButton(
                       onPressed: () {
