@@ -1,10 +1,16 @@
 import 'package:dish_dash/pages/auth/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Ensure this path is correct
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,12 +70,26 @@ class SettingsScreen extends StatelessWidget {
               context,
               icon: Icons.logout,
               text: 'Sign Out',
-              onTap: () {
-                print('Sign Out tapped');
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
+              onTap: () async {
+                try {
+                  await FirebaseAuth.instance.signOut();
+                  // The 'mounted' check is now valid because _SettingsScreenState is a State object.
+                  if (mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  print("Error during logout: $e");
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Napaka pri odjavi: $e')),
+                    );
+                  }
+                }
               },
             ),
             // Add more options as needed
@@ -79,6 +99,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  // Helper method for building settings options
   Widget _buildSettingsOption(
     BuildContext context, {
     required IconData icon,

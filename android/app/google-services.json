@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "197359795750",
+    "project_id": "tzva-dishdash",
+    "storage_bucket": "tzva-dishdash.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:197359795750:android:8b70c6eadfee3ceb3870e7",
+        "android_client_info": {
+          "package_name": "com.example.dish_dash"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4vgpt8y0scwLPFIGfWiUnGgLv3-tAZqo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

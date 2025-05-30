@@ -12,6 +12,8 @@ import 'package:dish_dash/pages/explore/explore_content_screen.dart';
 import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
 import 'package:dish_dash/pages/recipes/create_recipe_screen.dart'; // For the FAB
 
+import 'package:firebase_auth/firebase_auth.dart';
+
 class MainTabScreen extends StatefulWidget {
   const MainTabScreen({super.key});
 
@@ -112,12 +114,25 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('LogOut'),
-              onTap: () {
-                // Še treba dodat jwt brisanje
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
+              onTap: () async {
+                try {
+                  await FirebaseAuth.instance.signOut();
+                  if (mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  print("Error during logout: $e");
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Napaka pri odjavi: $e')),
+                    );
+                  }
+                }
               },
             ),
           ],
