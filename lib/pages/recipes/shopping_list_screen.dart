@@ -1,13 +1,7 @@
+// lib/pages/shopping_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
-
-// Define a simple class to hold shopping list item data (name and quantity)
-class ShoppingListItem {
-  String name;
-  int quantity;
-
-  ShoppingListItem({required this.name, this.quantity = 1});
-}
+import 'package:dish_dash/models/shopping_list_item.dart'; // Import your new model
 
 class ShoppingListScreen extends StatefulWidget {
   const ShoppingListScreen({super.key});
@@ -17,20 +11,10 @@ class ShoppingListScreen extends StatefulWidget {
 }
 
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
-  // CORRECTED: Now stores a list of ShoppingListItem objects with initial values
   final List<ShoppingListItem> _shoppingItems = [
-    ShoppingListItem(
-      name: 'Jajca',
-      quantity: 2,
-    ), // Corrected to ShoppingListItem
-    ShoppingListItem(
-      name: 'Banane',
-      quantity: 1,
-    ), // Corrected to ShoppingListItem
-    ShoppingListItem(
-      name: 'Mleko',
-      quantity: 1,
-    ), // Corrected to ShoppingListItem
+    ShoppingListItem(name: 'Jajca', quantity: 2),
+    ShoppingListItem(name: 'Banane', quantity: 1),
+    ShoppingListItem(name: 'Mleko', quantity: 1),
   ];
 
   final TextEditingController _newItemController = TextEditingController();
@@ -45,7 +29,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     final newItemName = _newItemController.text.trim();
     if (newItemName.isNotEmpty) {
       setState(() {
-        // Check if item already exists, if so, increment quantity
         int existingIndex = _shoppingItems.indexWhere(
           (item) => item.name.toLowerCase() == newItemName.toLowerCase(),
         );
@@ -76,9 +59,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       if (_shoppingItems[index].quantity > 1) {
         _shoppingItems[index].quantity--;
       } else {
-        // Optionally, remove the item if quantity drops to 0 or less
         _deleteItem(index);
       }
+    });
+  }
+
+  // New method to toggle item's checked status
+  void _toggleChecked(int index) {
+    setState(() {
+      _shoppingItems[index].isChecked = !_shoppingItems[index].isChecked;
     });
   }
 
@@ -98,6 +87,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             icon: const Icon(Icons.person),
             onPressed: () {
               print('Profile icon pressed');
+              // Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePageScreen()));
             },
           ),
         ],
@@ -119,7 +109,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               ),
             ),
             const SizedBox(height: 30),
-            // Input field and Add button for new items
             Row(
               children: [
                 Expanded(
@@ -164,6 +153,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               child: ListView.builder(
                 itemCount: _shoppingItems.length,
                 itemBuilder: (context, index) {
+                  final item = _shoppingItems[index]; // Get the item
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 15.0),
                     child: Container(
@@ -177,19 +167,39 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                       ),
                       child: Row(
                         children: [
+                          // Checkbox for the item
+                          GestureDetector(
+                            onTap: () => _toggleChecked(index),
+                            child: Icon(
+                              item.isChecked
+                                  ? Icons.check_box
+                                  : Icons.check_box_outline_blank,
+                              color:
+                                  item.isChecked
+                                      ? AppColors
+                                          .leafGreen // Checked color
+                                      : AppColors.dimGray, // Unchecked color
+                            ),
+                          ),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              _shoppingItems[index].name, // Display item name
+                              item.name, // Display item name
                               style: TextStyle(
                                 fontSize: 18,
                                 color: AppColors.charcoal,
+                                decoration:
+                                    item.isChecked
+                                        ? TextDecoration
+                                            .lineThrough // Strikethrough if checked
+                                        : TextDecoration.none,
+                                decorationColor: AppColors.charcoal,
                               ),
                             ),
                           ),
                           // Quantity controls
                           Row(
-                            mainAxisSize:
-                                MainAxisSize.min, // Wrap content tightly
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               GestureDetector(
                                 onTap: () => _decrementQuantity(index),
@@ -203,7 +213,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                   horizontal: 8.0,
                                 ),
                                 child: Text(
-                                  '${_shoppingItems[index].quantity}', // Display quantity
+                                  '${item.quantity}', // Display quantity
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
