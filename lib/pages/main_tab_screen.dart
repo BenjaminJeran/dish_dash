@@ -1,6 +1,8 @@
 // lib/pages/main_tab_screen.dart
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/pages/profile_page_screen.dart';
+import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
+import 'package:dish_dash/pages/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Import your custom colors
 
@@ -79,7 +81,12 @@ class _MainTabScreenState extends State<MainTabScreen> {
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -90,11 +97,23 @@ class _MainTabScreenState extends State<MainTabScreen> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.shopping_bag),
+              title: const Text("Shopping List"),
+              onTap:
+                  () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ShoppingListScreen(),
+                      ),
+                    ),
+                  },
+            ),
+            ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('LogOut'),
               onTap: () {
                 // Še treba dodat jwt brisanje
-
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
