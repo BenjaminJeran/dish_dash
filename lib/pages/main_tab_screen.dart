@@ -1,4 +1,5 @@
 // lib/pages/main_tab_screen.dart
+import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/pages/profile_page_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Import your custom colors
@@ -86,6 +87,18 @@ class _MainTabScreenState extends State<MainTabScreen> {
               title: const Text('About'),
               onTap: () {
                 Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('LogOut'),
+              onTap: () {
+                // Še treba dodat jwt brisanje
+
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
               },
             ),
           ],
