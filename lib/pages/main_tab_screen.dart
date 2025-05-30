@@ -9,7 +9,7 @@ import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
 import 'package:dish_dash/pages/recipes/create_recipe_screen.dart'; // For the FAB
 
 class MainTabScreen extends StatefulWidget {
-  const MainTabScreen({Key? key}) : super(key: key);
+  const MainTabScreen({super.key});
 
   @override
   State<MainTabScreen> createState() => _MainTabScreenState();
@@ -42,8 +42,8 @@ class _MainTabScreenState extends State<MainTabScreen> {
           );
         },
         backgroundColor: AppColors.leafGreen,
-        child: const Icon(Icons.add, color: AppColors.white),
         shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: AppColors.white),
       ),
       // MODIFIED: FAB location changed to endDocked
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,

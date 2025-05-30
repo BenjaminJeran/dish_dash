@@ -7,7 +7,7 @@ import 'package:dish_dash/pages/recipes/shopping_list_screen.dart'; // To add it
 class RecipeDetailsScreen extends StatelessWidget {
   final Recipe recipe; // The recipe object to display
 
-  const RecipeDetailsScreen({Key? key, required this.recipe}) : super(key: key);
+  const RecipeDetailsScreen({super.key, required this.recipe});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,9 @@ class RecipeDetailsScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ProfilePageScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePageScreen(),
+                ),
               );
             },
           ),
@@ -38,7 +40,9 @@ class RecipeDetailsScreen extends StatelessWidget {
         foregroundColor: AppColors.charcoal,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 20.0), // Padding for the bottom buttons
+        padding: const EdgeInsets.only(
+          bottom: 20.0,
+        ), // Padding for the bottom buttons
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -64,7 +68,8 @@ class RecipeDetailsScreen extends StatelessWidget {
                     ),
                     child: IconButton(
                       icon: Icon(
-                        Icons.favorite_border, // Or Icons.favorite if already favorited
+                        Icons
+                            .favorite_border, // Or Icons.favorite if already favorited
                         color: AppColors.tomatoRed,
                       ),
                       onPressed: () {
@@ -106,11 +111,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Icon(
-                        Icons.people,
-                        size: 20,
-                        color: AppColors.dimGray,
-                      ),
+                      Icon(Icons.people, size: 20, color: AppColors.dimGray),
                       const SizedBox(width: 4),
                       Text(
                         '${recipe.servings} servings',
@@ -139,13 +140,21 @@ class RecipeDetailsScreen extends StatelessWidget {
                     title: 'Sestavine', // Ingredients
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: recipe.ingredients.map((ingredient) => Padding(
-                        padding: const EdgeInsets.only(bottom: 4.0),
-                        child: Text(
-                          '- $ingredient',
-                          style: TextStyle(fontSize: 16, color: AppColors.charcoal),
-                        ),
-                      )).toList(),
+                      children:
+                          recipe.ingredients
+                              .map(
+                                (ingredient) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4.0),
+                                  child: Text(
+                                    '- $ingredient',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.charcoal,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -157,17 +166,21 @@ class RecipeDetailsScreen extends StatelessWidget {
                     title: 'Navodila za pripravo', // Preparation Instructions
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: recipe.instructions.asMap().entries.map((entry) {
-                        int idx = entry.key;
-                        String instruction = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Text(
-                            '${idx + 1}. $instruction',
-                            style: TextStyle(fontSize: 16, color: AppColors.charcoal),
-                          ),
-                        );
-                      }).toList(),
+                      children:
+                          recipe.instructions.asMap().entries.map((entry) {
+                            int idx = entry.key;
+                            String instruction = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                '${idx + 1}. $instruction',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.charcoal,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -181,7 +194,10 @@ class RecipeDetailsScreen extends StatelessWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.leafGreen,
-                        minimumSize: Size(MediaQuery.of(context).size.width * 0.8, 50),
+                        minimumSize: Size(
+                          MediaQuery.of(context).size.width * 0.8,
+                          50,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -212,7 +228,9 @@ class RecipeDetailsScreen extends StatelessWidget {
                           // For now, let's just show a snackbar or navigate.
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Dodano v nakupovalni seznam: ${recipe.ingredients.join(', ')}'),
+                              content: Text(
+                                'Dodano v nakupovalni seznam: ${recipe.ingredients.join(', ')}',
+                              ),
                               duration: const Duration(seconds: 2),
                             ),
                           );
@@ -240,7 +258,8 @@ class RecipeDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStepCard(BuildContext context, {
+  Widget _buildStepCard(
+    BuildContext context, {
     required int stepNumber,
     required String title,
     required Widget content, // Changed to Widget to allow flexible content

@@ -5,16 +5,12 @@ class ResetPasswordScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    final _emailController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final emailController = TextEditingController();
 
     return Scaffold(
       appBar: AppBar(
-        title: Image.asset(
-          'assets/logo.png',
-          height: 93,
-          width: 93,
-        ),
+        title: Image.asset('assets/logo.png', height: 93, width: 93),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -23,16 +19,13 @@ class ResetPasswordScreen extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
                   'Pozabljeno geslo?',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -43,7 +36,7 @@ class ResetPasswordScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
-                  controller: _emailController,
+                  controller: emailController,
                   decoration: const InputDecoration(
                     labelText: 'E-pošta',
                     border: OutlineInputBorder(),
@@ -56,18 +49,22 @@ class ResetPasswordScreen extends StatelessWidget {
                     return null;
                   },
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    if (_formKey.currentState!.validate()) {
+                    if (formKey.currentState!.validate()) {
                       // Logic to send reset email
-                      print('Password reset link sent to ${_emailController.text}');
+                      print(
+                        'Password reset link sent to ${emailController.text}',
+                      );
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Povezava za ponastavitev gesla je bila poslana.'),
+                          content: Text(
+                            'Povezava za ponastavitev gesla je bila poslana.',
+                          ),
                         ),
                       );
                       Navigator.pop(context); // Go back to login

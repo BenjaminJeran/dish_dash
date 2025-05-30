@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 
 class RecipesContentScreen extends StatelessWidget {
-  const RecipesContentScreen({Key? key}) : super(key: key);
+  const RecipesContentScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

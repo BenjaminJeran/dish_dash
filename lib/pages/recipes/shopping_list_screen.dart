@@ -10,7 +10,7 @@ class ShoppingListItem {
 }
 
 class ShoppingListScreen extends StatefulWidget {
-  const ShoppingListScreen({Key? key}) : super(key: key);
+  const ShoppingListScreen({super.key});
 
   @override
   State<ShoppingListScreen> createState() => _ShoppingListScreenState();
@@ -19,9 +19,18 @@ class ShoppingListScreen extends StatefulWidget {
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   // CORRECTED: Now stores a list of ShoppingListItem objects with initial values
   final List<ShoppingListItem> _shoppingItems = [
-    ShoppingListItem(name: 'Jajca', quantity: 2), // Corrected to ShoppingListItem
-    ShoppingListItem(name: 'Banane', quantity: 1), // Corrected to ShoppingListItem
-    ShoppingListItem(name: 'Mleko', quantity: 1), // Corrected to ShoppingListItem
+    ShoppingListItem(
+      name: 'Jajca',
+      quantity: 2,
+    ), // Corrected to ShoppingListItem
+    ShoppingListItem(
+      name: 'Banane',
+      quantity: 1,
+    ), // Corrected to ShoppingListItem
+    ShoppingListItem(
+      name: 'Mleko',
+      quantity: 1,
+    ), // Corrected to ShoppingListItem
   ];
 
   final TextEditingController _newItemController = TextEditingController();
@@ -38,7 +47,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       setState(() {
         // Check if item already exists, if so, increment quantity
         int existingIndex = _shoppingItems.indexWhere(
-            (item) => item.name.toLowerCase() == newItemName.toLowerCase());
+          (item) => item.name.toLowerCase() == newItemName.toLowerCase(),
+        );
         if (existingIndex != -1) {
           _shoppingItems[existingIndex].quantity++;
         } else {
@@ -82,9 +92,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             Navigator.pop(context);
           },
         ),
-        title: Center(
-            child: Image.asset('assets/logo.png',
-                height: 80)),
+        title: Center(child: Image.asset('assets/logo.png', height: 80)),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
@@ -126,7 +134,9 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                         hintText: 'Dodaj nov element',
                         hintStyle: TextStyle(color: AppColors.dimGray),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
+                          horizontal: 20,
+                          vertical: 15,
+                        ),
                         border: InputBorder.none,
                       ),
                       style: TextStyle(color: AppColors.charcoal),
@@ -144,11 +154,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                       color: AppColors.leafGreen,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
-                      Icons.add,
-                      color: AppColors.white,
-                      size: 30,
-                    ),
+                    child: Icon(Icons.add, color: AppColors.white, size: 30),
                   ),
                 ),
               ],
@@ -166,7 +172,9 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
+                        horizontal: 20,
+                        vertical: 15,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -180,14 +188,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                           ),
                           // Quantity controls
                           Row(
-                            mainAxisSize: MainAxisSize.min, // Wrap content tightly
+                            mainAxisSize:
+                                MainAxisSize.min, // Wrap content tightly
                             children: [
                               GestureDetector(
                                 onTap: () => _decrementQuantity(index),
-                                child: Icon(Icons.remove_circle_outline, color: AppColors.dimGray),
+                                child: Icon(
+                                  Icons.remove_circle_outline,
+                                  color: AppColors.dimGray,
+                                ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                ),
                                 child: Text(
                                   '${_shoppingItems[index].quantity}', // Display quantity
                                   style: TextStyle(
@@ -199,15 +213,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                               ),
                               GestureDetector(
                                 onTap: () => _incrementQuantity(index),
-                                child: Icon(Icons.add_circle_outline, color: AppColors.dimGray),
+                                child: Icon(
+                                  Icons.add_circle_outline,
+                                  color: AppColors.dimGray,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(width: 10),
                           GestureDetector(
                             onTap: () => _deleteItem(index),
-                            child: Icon(Icons.delete_outline,
-                                color: AppColors.tomatoRed),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: AppColors.tomatoRed,
+                            ),
                           ),
                         ],
                       ),

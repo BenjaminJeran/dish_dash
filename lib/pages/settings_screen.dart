@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Ensure this path is correct
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +11,9 @@ class SettingsScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous screen (ProfilePageScreen)
+            Navigator.pop(
+              context,
+            ); // Navigate back to the previous screen (ProfilePageScreen)
           },
         ),
         title: Center(
@@ -76,7 +78,8 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsOption(BuildContext context, {
+  Widget _buildSettingsOption(
+    BuildContext context, {
     required IconData icon,
     required String text,
     required VoidCallback onTap,

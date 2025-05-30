@@ -17,11 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Image.asset(
-          'assets/logo.png',
-          height: 93,
-          width: 93,
-        ),
+        title: Image.asset('assets/logo.png', height: 93, width: 93),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -37,10 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Screen Title
                 const Text(
                   'Registracija',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
@@ -59,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -73,7 +66,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     floatingLabelBehavior: FloatingLabelBehavior.auto,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -89,7 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -103,7 +98,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     floatingLabelBehavior: FloatingLabelBehavior.auto,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -120,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 32),

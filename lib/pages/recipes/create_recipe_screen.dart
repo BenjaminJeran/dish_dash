@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dish_dash/colors/app_colors.dart';
 
 class CreateRecipeScreen extends StatefulWidget {
-  const CreateRecipeScreen({Key? key}) : super(key: key);
+  const CreateRecipeScreen({super.key});
 
   @override
   State<CreateRecipeScreen> createState() => _CreateRecipeScreenState();

@@ -5,7 +5,7 @@ import 'package:dish_dash/colors/app_colors.dart'; // Import custom colors // Im
 import 'package:dish_dash/models/recipe.dart'; // Import the Recipe model
 
 class HomeContentScreen extends StatelessWidget {
-  const HomeContentScreen({Key? key}) : super(key: key);
+  const HomeContentScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,8 @@ class HomeContentScreen extends StatelessWidget {
     final Recipe classicPizza = Recipe(
       name: 'Classic Margherita Pizza',
       imageUrl: 'assets/pizza_margherita.png', // Ensure this image exists
-      description: 'A simple yet delicious Neapolitan pizza with fresh ingredients that highlight the natural flavors of basil, mozzarella, and tomatoes. Perfect for a quick family meal or a party.',
+      description:
+          'A simple yet delicious Neapolitan pizza with fresh ingredients that highlight the natural flavors of basil, mozzarella, and tomatoes. Perfect for a quick family meal or a party.',
       cookingTime: '15',
       servings: '4',
       ingredients: [
@@ -38,7 +39,8 @@ class HomeContentScreen extends StatelessWidget {
     final Recipe strawberryIceCream = Recipe(
       name: 'Jagodni Sladoled', // Strawberry Ice Cream
       imageUrl: 'assets/strawberry_ice_cream.jpg', // Ensure this image exists
-      description: 'Osvežujoč in enostaven jagodni sladoled, kot nalašč za poletne dni. Pripravljen hitro in brez aparata za sladoled, idealen za hitro sladko pregreho.', // Refreshing and simple strawberry ice cream, perfect for summer days. Prepared quickly and without an ice cream maker, ideal for a quick sweet treat.
+      description:
+          'Osvežujoč in enostaven jagodni sladoled, kot nalašč za poletne dni. Pripravljen hitro in brez aparata za sladoled, idealen za hitro sladko pregreho.', // Refreshing and simple strawberry ice cream, perfect for summer days. Prepared quickly and without an ice cream maker, ideal for a quick sweet treat.
       cookingTime: '15',
       servings: '4',
       ingredients: [
@@ -59,7 +61,8 @@ class HomeContentScreen extends StatelessWidget {
     final Recipe spaghettiCarbonara = Recipe(
       name: 'Špageti Carbonara', // Spaghetti Carbonara
       imageUrl: 'assets/spaghetti_carbonara.jpg', // Ensure this image exists
-      description: 'Klasična italijanska jed s kremasto omako, hrustljavo panceto in svežim parmezanom. Hitro in enostavno za pripravo, popolna za hitro kosilo ali večerjo.', // Classic Italian dish with creamy sauce, crispy pancetta, and fresh Parmesan. Quick and easy to prepare, perfect for a fast lunch or dinner.
+      description:
+          'Klasična italijanska jed s kremasto omako, hrustljavo panceto in svežim parmezanom. Hitro in enostavno za pripravo, popolna za hitro kosilo ali večerjo.', // Classic Italian dish with creamy sauce, crispy pancetta, and fresh Parmesan. Quick and easy to prepare, perfect for a fast lunch or dinner.
       cookingTime: '20',
       servings: '2',
       ingredients: [
@@ -81,7 +84,6 @@ class HomeContentScreen extends StatelessWidget {
       ],
     );
 
-
     return Scaffold(
       appBar: AppBar(
         // AppBar will get its styling from ThemeData in main.dart
@@ -89,7 +91,10 @@ class HomeContentScreen extends StatelessWidget {
         automaticallyImplyLeading:
             false, // Prevents Flutter from adding a back button automatically
         title: Center(
-          child: Image.asset('assets/logo.png', height: 80), // Use your logo image
+          child: Image.asset(
+            'assets/logo.png',
+            height: 80,
+          ), // Use your logo image
         ),
         actions: [
           IconButton(
@@ -119,13 +124,16 @@ class HomeContentScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: InkWell( // Use InkWell for tap effect
+              child: InkWell(
+                // Use InkWell for tap effect
                 borderRadius: BorderRadius.circular(15),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RecipeDetailsScreen(recipe: classicPizza),
+                      builder:
+                          (context) =>
+                              RecipeDetailsScreen(recipe: classicPizza),
                     ),
                   );
                 },
@@ -221,7 +229,6 @@ class HomeContentScreen extends StatelessWidget {
           ],
         ),
       ),
-      
     );
   }
 

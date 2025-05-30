@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Ensure this path is correct
 
 class ProfilePageScreen extends StatefulWidget {
-  const ProfilePageScreen({Key? key}) : super(key: key);
+  const ProfilePageScreen({super.key});
 
   @override
   State<ProfilePageScreen> createState() => _ProfilePageScreenState();
@@ -11,10 +11,10 @@ class ProfilePageScreen extends StatefulWidget {
 
 class _ProfilePageScreenState extends State<ProfilePageScreen> {
   // You might fetch this data from a user model or database
-  String _userName = 'Miha Klančnik';
-  String _userProfession = 'Profesionalni kuhar';
+  final String _userName = 'Miha Klančnik';
+  final String _userProfession = 'Profesionalni kuhar';
   String _aboutMeText = 'O meni'; // Placeholder for "About me"
-  double _cookingChallengeProgress = 0.75; // 75% progress
+  final double _cookingChallengeProgress = 0.75; // 75% progress
 
   // A controller for the "About me" text field if it needs to be editable
   final TextEditingController _aboutMeController = TextEditingController();

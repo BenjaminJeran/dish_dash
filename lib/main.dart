@@ -1,8 +1,6 @@
-import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/colors/app_colors.dart';
-import 'package:dish_dash/pages/onboarding_screen.dart'; // Import your onboarding screen
+// Import your onboarding screen
 import 'package:dish_dash/pages/splash_screen.dart'; // Import your splash screen
 
 void main() {
