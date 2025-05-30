@@ -1,7 +1,10 @@
 // lib/pages/shopping_list_screen.dart
+import 'package:dish_dash/pages/profile_page_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:dish_dash/colors/app_colors.dart';
-import 'package:dish_dash/models/shopping_list_item.dart'; // Import your new model
+import 'package:dish_dash/models/shopping_list_item.dart'; // Import your updated model
 
 class ShoppingListScreen extends StatefulWidget {
   const ShoppingListScreen({super.key});
@@ -11,13 +14,28 @@ class ShoppingListScreen extends StatefulWidget {
 }
 
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
-  final List<ShoppingListItem> _shoppingItems = [
-    ShoppingListItem(name: 'Jajca', quantity: 2),
-    ShoppingListItem(name: 'Banane', quantity: 1),
-    ShoppingListItem(name: 'Mleko', quantity: 1),
-  ];
-
   final TextEditingController _newItemController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth instance
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance; // Firestore instance
+
+  // Dobim id trenutnega uporabnika
+  String? get userId => _auth.currentUser?.uid;
+
+  // pot kolekcije je 'users/{userId}/shoppingLists'
+  CollectionReference<ShoppingListItem> get _userShoppingListCollection {
+    if (userId == null) {
+      throw Exception("User not logged in!");
+    }
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('shoppingLists')
+        .withConverter<ShoppingListItem>(
+          fromFirestore: ShoppingListItem.fromFirestore,
+          toFirestore: (item, options) => item.toFirestore(),
+        );
+  }
 
   @override
   void dispose() {
@@ -25,50 +43,67 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     super.dispose();
   }
 
-  void _addItem() {
+  Future<void> _addItem() async {
     final newItemName = _newItemController.text.trim();
-    if (newItemName.isNotEmpty) {
-      setState(() {
-        int existingIndex = _shoppingItems.indexWhere(
-          (item) => item.name.toLowerCase() == newItemName.toLowerCase(),
-        );
-        if (existingIndex != -1) {
-          _shoppingItems[existingIndex].quantity++;
-        } else {
-          _shoppingItems.add(ShoppingListItem(name: newItemName));
-        }
-        _newItemController.clear();
+    if (newItemName.isNotEmpty && userId != null) {
+      final querySnapshot =
+          await _userShoppingListCollection
+              .where('name', isEqualTo: newItemName)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final existingItemDoc = querySnapshot.docs.first;
+        final existingItem = existingItemDoc.data();
+        await _userShoppingListCollection.doc(existingItem.id).update({
+          'quantity': existingItem.quantity + 1,
+        });
+      } else {
+        final newItem = ShoppingListItem(name: newItemName);
+        await _userShoppingListCollection.add(newItem);
+      }
+      _newItemController.clear();
+    } else if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to add items to your list.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteItem(String itemId) async {
+    if (userId != null) {
+      await _userShoppingListCollection.doc(itemId).delete();
+    }
+  }
+
+  Future<void> _incrementQuantity(ShoppingListItem item) async {
+    if (userId != null && item.id != null) {
+      await _userShoppingListCollection.doc(item.id).update({
+        'quantity': item.quantity + 1,
       });
     }
   }
 
-  void _deleteItem(int index) {
-    setState(() {
-      _shoppingItems.removeAt(index);
-    });
-  }
-
-  void _incrementQuantity(int index) {
-    setState(() {
-      _shoppingItems[index].quantity++;
-    });
-  }
-
-  void _decrementQuantity(int index) {
-    setState(() {
-      if (_shoppingItems[index].quantity > 1) {
-        _shoppingItems[index].quantity--;
+  Future<void> _decrementQuantity(ShoppingListItem item) async {
+    if (userId != null && item.id != null) {
+      if (item.quantity > 1) {
+        await _userShoppingListCollection.doc(item.id).update({
+          'quantity': item.quantity - 1,
+        });
       } else {
-        _deleteItem(index);
+        await _deleteItem(item.id!);
       }
-    });
+    }
   }
 
-  // New method to toggle item's checked status
-  void _toggleChecked(int index) {
-    setState(() {
-      _shoppingItems[index].isChecked = !_shoppingItems[index].isChecked;
-    });
+  Future<void> _toggleChecked(ShoppingListItem item) async {
+    if (userId != null && item.id != null) {
+      await _userShoppingListCollection.doc(item.id).update({
+        'isChecked': !item.isChecked,
+      });
+    }
   }
 
   @override
@@ -87,7 +122,12 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             icon: const Icon(Icons.person),
             onPressed: () {
               print('Profile icon pressed');
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePageScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePageScreen(),
+                ),
+              );
             },
           ),
         ],
@@ -150,103 +190,142 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.builder(
-                itemCount: _shoppingItems.length,
-                itemBuilder: (context, index) {
-                  final item = _shoppingItems[index]; // Get the item
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 15.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.paleGray,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 15,
-                      ),
-                      child: Row(
-                        children: [
-                          // Checkbox for the item
-                          GestureDetector(
-                            onTap: () => _toggleChecked(index),
-                            child: Icon(
-                              item.isChecked
-                                  ? Icons.check_box
-                                  : Icons.check_box_outline_blank,
-                              color:
-                                  item.isChecked
-                                      ? AppColors
-                                          .leafGreen // Checked color
-                                      : AppColors.dimGray, // Unchecked color
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              item.name, // Display item name
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: AppColors.charcoal,
-                                decoration:
-                                    item.isChecked
-                                        ? TextDecoration
-                                            .lineThrough // Strikethrough if checked
-                                        : TextDecoration.none,
-                                decorationColor: AppColors.charcoal,
-                              ),
-                            ),
-                          ),
-                          // Quantity controls
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => _decrementQuantity(index),
-                                child: Icon(
-                                  Icons.remove_circle_outline,
-                                  color: AppColors.dimGray,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8.0,
-                                ),
-                                child: Text(
-                                  '${item.quantity}', // Display quantity
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.charcoal,
+              // StreamBuilder za realtime posodobitve seznama
+              child:
+                  userId == null
+                      ? const Center(
+                        child: Text(
+                          'Please log in to view your shopping list.',
+                        ),
+                      )
+                      : StreamBuilder<QuerySnapshot<ShoppingListItem>>(
+                        stream:
+                            _userShoppingListCollection
+                                .orderBy('timestamp', descending: false)
+                                .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            );
+                          }
+
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          final shoppingItems =
+                              snapshot.data?.docs
+                                  .map((doc) => doc.data())
+                                  .toList() ??
+                              [];
+
+                          if (shoppingItems.isEmpty) {
+                            return const Center(
+                              child: Text('Your shopping list is empty!'),
+                            );
+                          }
+
+                          return ListView.builder(
+                            itemCount: shoppingItems.length,
+                            itemBuilder: (context, index) {
+                              final item = shoppingItems[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 15.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.paleGray,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 15,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () => _toggleChecked(item),
+                                        child: Icon(
+                                          item.isChecked
+                                              ? Icons.check_box
+                                              : Icons.check_box_outline_blank,
+                                          color:
+                                              item.isChecked
+                                                  ? AppColors.leafGreen
+                                                  : AppColors.dimGray,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          item.name,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            color: AppColors.charcoal,
+                                            decoration:
+                                                item.isChecked
+                                                    ? TextDecoration.lineThrough
+                                                    : TextDecoration.none,
+                                            decorationColor: AppColors.charcoal,
+                                          ),
+                                        ),
+                                      ),
+
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          GestureDetector(
+                                            onTap:
+                                                () => _decrementQuantity(item),
+                                            child: Icon(
+                                              Icons.remove_circle_outline,
+                                              color: AppColors.dimGray,
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8.0,
+                                            ),
+                                            child: Text(
+                                              '${item.quantity}',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.charcoal,
+                                              ),
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap:
+                                                () => _incrementQuantity(item),
+                                            child: Icon(
+                                              Icons.add_circle_outline,
+                                              color: AppColors.dimGray,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 10),
+                                      GestureDetector(
+                                        onTap: () => _deleteItem(item.id!),
+                                        child: Icon(
+                                          Icons.delete_outline,
+                                          color: AppColors.tomatoRed,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              GestureDetector(
-                                onTap: () => _incrementQuantity(index),
-                                child: Icon(
-                                  Icons.add_circle_outline,
-                                  color: AppColors.dimGray,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () => _deleteItem(index),
-                            child: Icon(
-                              Icons.delete_outline,
-                              color: AppColors.tomatoRed,
-                            ),
-                          ),
-                        ],
+                              );
+                            },
+                          );
+                        },
                       ),
-                    ),
-                  );
-                },
-              ),
             ),
             const SizedBox(height: 20),
-            // "Share List" Button
             Center(
               child: ElevatedButton(
                 onPressed: () {
