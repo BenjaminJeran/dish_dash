@@ -1,4 +1,5 @@
 // lib/pages/main_tab_screen.dart
+import 'package:dish_dash/pages/profile_page_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Import your custom colors
 
@@ -33,7 +34,63 @@ class _MainTabScreenState extends State<MainTabScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder:
+              (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+        ),
+        title: Center(child: Image.asset('assets/logo.png', height: 80)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePageScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.charcoal,
+      ),
       body: _widgetOptions.elementAt(_selectedIndex),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(color: AppColors.leafGreen),
+              child: const Text(
+                'Dish Dash Menu',
+                style: TextStyle(color: AppColors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('About'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -45,29 +102,20 @@ class _MainTabScreenState extends State<MainTabScreen> {
         shape: const CircleBorder(),
         child: const Icon(Icons.add, color: AppColors.white),
       ),
-      // MODIFIED: FAB location changed to endDocked
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       bottomNavigationBar: BottomAppBar(
         color: AppColors.white,
         surfaceTintColor: AppColors.white,
         shadowColor: AppColors.paleGray,
         elevation: 5.0,
-        shape:
-            const CircularNotchedRectangle(), // Notch will now be at the end for the FAB
-        notchMargin: 8.0, // Space between FAB and bar
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
         child: Row(
-          // MODIFIED: mainAxisAlignment can be kept as spaceAround or changed
-          // to spaceEvenly for potentially better visual balance with 3 items.
-          // Let's try spaceAround first as it's common.
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             _buildNavItem(0, Icons.home, 'Home'),
             _buildNavItem(1, Icons.search, 'Explore'),
             _buildNavItem(2, Icons.menu_book, 'Recipes'),
-            // MODIFIED: Removed the fixed SizedBox(width: 48)
-            // If the FAB is endDocked, it doesn't occupy space in the Row's center.
-            // The three _buildNavItem widgets (which are Expanded)
-            // will now distribute themselves across the available space.
           ],
         ),
       ),
@@ -81,9 +129,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
         onTap: () => _onItemTapped(index),
         customBorder: const CircleBorder(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 4.0,
-          ), // Keep reduced padding
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -92,7 +138,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
                 color: isSelected ? AppColors.leafGreen : AppColors.dimGray,
                 size: 26,
               ),
-              const SizedBox(height: 2), // Keep reduced SizedBox
+              const SizedBox(height: 2),
               Text(
                 label,
                 style: TextStyle(
