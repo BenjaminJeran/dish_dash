@@ -1,3 +1,4 @@
+import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; // Ensure this path is correct
 
@@ -11,15 +12,12 @@ class SettingsScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(
-              context,
-            ); // Navigate back to the previous screen (ProfilePageScreen)
+            Navigator.pop(context);
           },
         ),
         title: Center(
           child: Image.asset('assets/logo.png', height: 80), // Your app logo
         ),
-        // No actions needed on the right side for the settings page app bar based on the image
         actions: const [
           SizedBox(width: 50), // To balance the back button and center the logo
         ],
@@ -28,7 +26,7 @@ class SettingsScreen extends StatelessWidget {
         foregroundColor: AppColors.charcoal,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 35.0),
         child: Column(
           children: [
             // Settings Options List
@@ -68,7 +66,10 @@ class SettingsScreen extends StatelessWidget {
               text: 'Sign Out',
               onTap: () {
                 print('Sign Out tapped');
-                // TODO: Implement sign out logic (e.g., clear user session, navigate to login)
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
               },
             ),
             // Add more options as needed
