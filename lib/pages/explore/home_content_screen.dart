@@ -85,34 +85,6 @@ class HomeContentScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        // AppBar will get its styling from ThemeData in main.dart
-        leading: null, // No back button on the main tab screen
-        automaticallyImplyLeading:
-            false, // Prevents Flutter from adding a back button automatically
-        title: Center(
-          child: Image.asset(
-            'assets/logo.png',
-            height: 80,
-          ), // Use your logo image
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ProfilePageScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-        elevation: 0, // No shadow under app bar
-        backgroundColor: Colors.transparent, // Transparent background
-        foregroundColor: AppColors.charcoal, // Color for icons in app bar
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

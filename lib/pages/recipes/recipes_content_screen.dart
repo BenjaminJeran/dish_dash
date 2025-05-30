@@ -8,15 +8,6 @@ class RecipesContentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: null,
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Moji Recepti',
-          style: Theme.of(context).appBarTheme.titleTextStyle,
-        ), // "My Recipes"
-        centerTitle: true,
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

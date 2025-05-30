@@ -12,33 +12,6 @@ class RecipeDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // Navigate back
-          },
-        ),
-        title: Center(
-          child: Image.asset('assets/logo.png', height: 80), // Your app logo
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ProfilePageScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: AppColors.charcoal,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(
           bottom: 20.0,

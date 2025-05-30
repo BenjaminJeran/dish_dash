@@ -8,15 +8,6 @@ class ExploreContentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: null,
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Raziskuj',
-          style: Theme.of(context).appBarTheme.titleTextStyle,
-        ), // "Explore"
-        centerTitle: true,
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
