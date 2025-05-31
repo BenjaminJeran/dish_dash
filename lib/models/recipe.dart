@@ -4,8 +4,8 @@ class Recipe {
   final String description;
   final String cookingTime;
   final String servings;
-  final List<String> ingredients; // Example: ['2 jajca', '100g moke']
-  final List<String> instructions; // Example: ['Step 1: Zmešaj jajca', 'Step 2: Dodaj moko']
+  final List<String> ingredients;
+  final List<String> instructions;
 
   Recipe({
     required this.name,

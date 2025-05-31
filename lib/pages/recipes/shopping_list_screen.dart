@@ -1,8 +1,7 @@
 // lib/pages/shopping_list_screen.dart
 import 'package:dish_dash/pages/profile_page_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/shopping_list_item.dart'; // Import your updated model
 
@@ -15,27 +14,9 @@ class ShoppingListScreen extends StatefulWidget {
 
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final TextEditingController _newItemController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth instance
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance; // Firestore instance
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  // Dobim id trenutnega uporabnika
-  String? get userId => _auth.currentUser?.uid;
-
-  // pot kolekcije je 'users/{userId}/shoppingLists'
-  CollectionReference<ShoppingListItem> get _userShoppingListCollection {
-    if (userId == null) {
-      throw Exception("User not logged in!");
-    }
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('shoppingLists')
-        .withConverter<ShoppingListItem>(
-          fromFirestore: ShoppingListItem.fromFirestore,
-          toFirestore: (item, options) => item.toFirestore(),
-        );
-  }
+  String? get userId => _supabase.auth.currentUser?.id;
 
   @override
   void dispose() {
@@ -45,69 +26,190 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   Future<void> _addItem() async {
     final newItemName = _newItemController.text.trim();
-    if (newItemName.isNotEmpty && userId != null) {
-      final querySnapshot =
-          await _userShoppingListCollection
-              .where('name', isEqualTo: newItemName)
-              .limit(1)
-              .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        final existingItemDoc = querySnapshot.docs.first;
-        final existingItem = existingItemDoc.data();
-        await _userShoppingListCollection.doc(existingItem.id).update({
-          'quantity': existingItem.quantity + 1,
-        });
-      } else {
-        final newItem = ShoppingListItem(name: newItemName);
-        await _userShoppingListCollection.add(newItem);
+    // Ensure userId is not null before proceeding with database operations
+    if (userId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in to add items to your list.'),
+          ),
+        );
       }
-      _newItemController.clear();
-    } else if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please log in to add items to your list.'),
-        ),
-      );
+      return; // Exit if user is not logged in
+    }
+
+    if (newItemName.isNotEmpty) {
+      try {
+        final currentUserId = userId!; // Assert userId is not null here
+
+        // First, check if the item already exists for this user
+        final List<Map<String, dynamic>> existingItems = await _supabase
+            .from('shopping_items')
+            .select()
+            .eq('user_id', currentUserId) // Use the asserted non-null userId
+            .eq('name', newItemName)
+            .limit(1);
+
+        if (existingItems.isNotEmpty) {
+          // Item exists, increment quantity
+          final existingItemData = existingItems.first;
+          final currentQuantity = existingItemData['quantity'] as int;
+          await _supabase
+              .from('shopping_items')
+              .update({'quantity': currentQuantity + 1})
+              .eq('id', existingItemData['id'])
+              .eq(
+                'user_id',
+                currentUserId,
+              ); // Also ensure update is for the correct user
+        } else {
+          // Item does not exist, insert new item
+          final newItem = ShoppingListItem(name: newItemName);
+          await _supabase.from('shopping_items').insert({
+            'user_id': currentUserId, // Attach item to the current user
+            'name': newItem.name,
+            'quantity': newItem.quantity,
+            'is_checked': newItem.isChecked,
+            // 'created_at' is handled by database default now()
+          });
+        }
+        _newItemController.clear();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error adding item: $e')));
+        }
+        print('Error adding item: $e');
+      }
     }
   }
 
   Future<void> _deleteItem(String itemId) async {
-    if (userId != null) {
-      await _userShoppingListCollection.doc(itemId).delete();
+    // Ensure userId is not null before proceeding
+    if (userId == null) return;
+
+    try {
+      final currentUserId = userId!;
+
+      // Show loading indicator or disable UI temporarily
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Deleting item...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      final response = await _supabase
+          .from('shopping_items')
+          .delete()
+          .eq('id', itemId)
+          .eq('user_id', currentUserId);
+
+      // Optional: Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Item deleted successfully'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error deleting item: $e')));
+      }
+      print('Error deleting item: $e');
     }
   }
 
+  Future<void> _refreshList() async {
+    // Force refresh by recreating the stream
+    setState(() {
+      // This will trigger a rebuild and refresh the StreamBuilder
+    });
+  }
+
   Future<void> _incrementQuantity(ShoppingListItem item) async {
-    if (userId != null && item.id != null) {
-      await _userShoppingListCollection.doc(item.id).update({
-        'quantity': item.quantity + 1,
-      });
+    // Ensure userId and item.id are not null before proceeding
+    if (userId == null || item.id == null) return;
+    try {
+      final currentUserId = userId!;
+      final currentItemId = item.id!;
+
+      await _supabase
+          .from('shopping_items')
+          .update({'quantity': item.quantity + 1})
+          .eq('id', currentItemId)
+          .eq('user_id', currentUserId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error incrementing quantity: $e')),
+        );
+      }
+      print('Error incrementing quantity: $e');
     }
   }
 
   Future<void> _decrementQuantity(ShoppingListItem item) async {
-    if (userId != null && item.id != null) {
+    // Ensure userId and item.id are not null before proceeding
+    if (userId == null || item.id == null) return;
+    try {
+      final currentUserId = userId!;
+      final currentItemId = item.id!;
+
       if (item.quantity > 1) {
-        await _userShoppingListCollection.doc(item.id).update({
-          'quantity': item.quantity - 1,
-        });
+        await _supabase
+            .from('shopping_items')
+            .update({'quantity': item.quantity - 1})
+            .eq('id', currentItemId)
+            .eq('user_id', currentUserId);
       } else {
-        await _deleteItem(item.id!);
+        await _deleteItem(currentItemId);
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error decrementing quantity: $e')),
+        );
+      }
+      print('Error decrementing quantity: $e');
     }
   }
 
   Future<void> _toggleChecked(ShoppingListItem item) async {
-    if (userId != null && item.id != null) {
-      await _userShoppingListCollection.doc(item.id).update({
-        'isChecked': !item.isChecked,
-      });
+    // Ensure userId and item.id are not null before proceeding
+    if (userId == null || item.id == null) return;
+    try {
+      final currentUserId = userId!;
+      final currentItemId = item.id!;
+
+      await _supabase
+          .from('shopping_items')
+          .update({'is_checked': !item.isChecked})
+          .eq('id', currentItemId)
+          .eq('user_id', currentUserId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error toggling checked status: $e')),
+        );
+      }
+      print('Error toggling checked status: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Create a local non-nullable variable for userId at the start of build
+    // if userId is not null. This promotes the type.
+    final String? currentUserId = userId;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -121,7 +223,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              print('Profile icon pressed');
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -190,23 +291,32 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              // StreamBuilder za realtime posodobitve seznama
               child:
-                  userId == null
+                  currentUserId == null
                       ? const Center(
                         child: Text(
                           'Please log in to view your shopping list.',
                         ),
                       )
-                      : StreamBuilder<QuerySnapshot<ShoppingListItem>>(
-                        stream:
-                            _userShoppingListCollection
-                                .orderBy('timestamp', descending: false)
-                                .snapshots(),
+                      : StreamBuilder<List<Map<String, dynamic>>>(
+                        stream: _supabase
+                            .from('shopping_items')
+                            .stream(primaryKey: ['id'])
+                            .eq('user_id', currentUserId)
+                            .order('created_at', ascending: true),
                         builder: (context, snapshot) {
                           if (snapshot.hasError) {
                             return Center(
-                              child: Text('Error: ${snapshot.error}'),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Error: ${snapshot.error}'),
+                                  ElevatedButton(
+                                    onPressed: _refreshList,
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
                             );
                           }
 
@@ -218,109 +328,129 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                           }
 
                           final shoppingItems =
-                              snapshot.data?.docs
-                                  .map((doc) => doc.data())
+                              snapshot.data
+                                  ?.map(
+                                    (itemData) =>
+                                        ShoppingListItem.fromSupabase(itemData),
+                                  )
                                   .toList() ??
                               [];
 
                           if (shoppingItems.isEmpty) {
-                            return const Center(
-                              child: Text('Your shopping list is empty!'),
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text('Your shopping list is empty!'),
+                                  const SizedBox(height: 10),
+                                  ElevatedButton(
+                                    onPressed: _refreshList,
+                                    child: const Text('Refresh'),
+                                  ),
+                                ],
+                              ),
                             );
                           }
 
-                          return ListView.builder(
-                            itemCount: shoppingItems.length,
-                            itemBuilder: (context, index) {
-                              final item = shoppingItems[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 15.0),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.paleGray,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 15,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () => _toggleChecked(item),
-                                        child: Icon(
-                                          item.isChecked
-                                              ? Icons.check_box
-                                              : Icons.check_box_outline_blank,
-                                          color:
-                                              item.isChecked
-                                                  ? AppColors.leafGreen
-                                                  : AppColors.dimGray,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          item.name,
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            color: AppColors.charcoal,
-                                            decoration:
+                          return RefreshIndicator(
+                            onRefresh: _refreshList,
+                            child: ListView.builder(
+                              itemCount: shoppingItems.length,
+                              itemBuilder: (context, index) {
+                                final item = shoppingItems[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 15.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.paleGray,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 15,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () => _toggleChecked(item),
+                                          child: Icon(
+                                            item.isChecked
+                                                ? Icons.check_box
+                                                : Icons.check_box_outline_blank,
+                                            color:
                                                 item.isChecked
-                                                    ? TextDecoration.lineThrough
-                                                    : TextDecoration.none,
-                                            decorationColor: AppColors.charcoal,
+                                                    ? AppColors.leafGreen
+                                                    : AppColors.dimGray,
                                           ),
                                         ),
-                                      ),
-
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          GestureDetector(
-                                            onTap:
-                                                () => _decrementQuantity(item),
-                                            child: Icon(
-                                              Icons.remove_circle_outline,
-                                              color: AppColors.dimGray,
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            item.name,
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              color: AppColors.charcoal,
+                                              decoration:
+                                                  item.isChecked
+                                                      ? TextDecoration
+                                                          .lineThrough
+                                                      : TextDecoration.none,
+                                              decorationColor:
+                                                  AppColors.charcoal,
                                             ),
                                           ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8.0,
-                                            ),
-                                            child: Text(
-                                              '${item.quantity}',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.charcoal,
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            GestureDetector(
+                                              onTap:
+                                                  () =>
+                                                      _decrementQuantity(item),
+                                              child: Icon(
+                                                Icons.remove_circle_outline,
+                                                color: AppColors.dimGray,
                                               ),
                                             ),
-                                          ),
-                                          GestureDetector(
-                                            onTap:
-                                                () => _incrementQuantity(item),
-                                            child: Icon(
-                                              Icons.add_circle_outline,
-                                              color: AppColors.dimGray,
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8.0,
+                                                  ),
+                                              child: Text(
+                                                '${item.quantity}',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.charcoal,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 10),
-                                      GestureDetector(
-                                        onTap: () => _deleteItem(item.id!),
-                                        child: Icon(
-                                          Icons.delete_outline,
-                                          color: AppColors.tomatoRed,
+                                            GestureDetector(
+                                              onTap:
+                                                  () =>
+                                                      _incrementQuantity(item),
+                                              child: Icon(
+                                                Icons.add_circle_outline,
+                                                color: AppColors.dimGray,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 10),
+                                        GestureDetector(
+                                          onTap: () => _deleteItem(item.id!),
+                                          child: Icon(
+                                            Icons.delete_outline,
+                                            color: AppColors.tomatoRed,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           );
                         },
                       ),
@@ -330,11 +460,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   print('Share list pressed');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Funkcija deljenja se razvija!'),
-                    ),
-                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funkcija deljenja se razvija!'),
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.leafGreen,

@@ -4,7 +4,10 @@ import 'package:dish_dash/pages/main_tab_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/pages/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+
+// You can remove this import now that Firebase is not checked here
+// import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -36,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   bool _checkUserStatus() {
-    return FirebaseAuth.instance.currentUser != null;
+    return Supabase.instance.client.auth.currentUser != null;
   }
 
   Future<void> _initializeApp() async {

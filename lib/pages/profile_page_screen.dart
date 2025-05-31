@@ -1,8 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/pages/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ProfilePageScreen extends StatefulWidget {
   const ProfilePageScreen({super.key});
@@ -12,12 +15,13 @@ class ProfilePageScreen extends StatefulWidget {
 }
 
 class _ProfilePageScreenState extends State<ProfilePageScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final ImagePicker _imagePicker = ImagePicker();
 
   String _userName = 'Loading...';
   String _userProfession = 'Profesionalni kuhar';
   String _aboutMeText = 'O meni';
+  String? _profileImageUrl;
   final double _cookingChallengeProgress = 0.75;
 
   final TextEditingController _userNameController = TextEditingController();
@@ -26,6 +30,7 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
   bool _isEditingName = false;
   bool _isEditingAboutMe = false;
   bool _isLoading = true;
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -45,43 +50,58 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
       _isLoading = true;
     });
 
-    User? user = _auth.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(user.uid).get();
+    try {
+      final User? user = _supabase.auth.currentUser;
+      if (user != null) {
+        final response =
+            await _supabase
+                .from('users')
+                .select()
+                .eq('id', user.id)
+                .maybeSingle();
 
-      if (userDoc.exists) {
-        setState(() {
-          _userName = userDoc.get('name') ?? 'No Name';
-          _userProfession = userDoc.get('profession') ?? 'Not specified';
-          _aboutMeText =
-              userDoc.get('aboutMe') ?? 'Tell us something about yourself!';
-          _userNameController.text = _userName;
-          _aboutMeController.text = _aboutMeText;
-        });
+        if (response != null) {
+          setState(() {
+            _userName = response['name'] ?? 'No Name';
+            _userProfession = response['profession'] ?? 'Not specified';
+            _aboutMeText =
+                response['about_me'] ?? 'Tell us something about yourself!';
+            _profileImageUrl = response['profile_image_url'];
+            _userNameController.text = _userName;
+            _aboutMeController.text = _aboutMeText;
+          });
+        } else {
+          // Create new user record
+          await _supabase.from('users').insert({
+            'id': user.id,
+            'name': 'New User',
+            'email': user.email,
+            'profession': 'Profesionalni kuhar',
+            'about_me': 'O meni',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+
+          setState(() {
+            _userName = 'New User';
+            _userProfession = 'Profesionalni kuhar';
+            _aboutMeText = 'O meni';
+            _userNameController.text = _userName;
+            _aboutMeController.text = _aboutMeText;
+          });
+        }
       } else {
-        await _firestore.collection('users').doc(user.uid).set({
-          'name': 'New User',
-          'email': user.email,
-          'profession': 'Profesionalni kuhar',
-          'aboutMe': 'O meni',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+        print('User not logged in!');
         setState(() {
-          _userName = 'New User';
-          _userProfession = 'Profesionalni kuhar';
-          _aboutMeText = 'O meni';
-          _userNameController.text = _userName;
-          _aboutMeController.text = _aboutMeText;
+          _userName = 'Guest';
+          _userProfession = '';
+          _aboutMeText = '';
         });
       }
-    } else {
-      print('User not logged in!');
-      setState(() {
-        _userName = 'Guest';
-        _userProfession = '';
-        _aboutMeText = '';
-      });
+    } catch (e) {
+      print('Error fetching user data: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading profile: $e')));
     }
 
     setState(() {
@@ -90,13 +110,17 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
   }
 
   Future<void> _updateUserData(String field, dynamic value) async {
-    User? user = _auth.currentUser;
+    final User? user = _supabase.auth.currentUser;
     if (user != null) {
       try {
-        await _firestore.collection('users').doc(user.uid).update({
-          field: value,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        await _supabase
+            .from('users')
+            .update({
+              field: value,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', user.id);
+
         print('User data updated successfully: $field = $value');
         ScaffoldMessenger.of(
           context,
@@ -107,6 +131,188 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to update $field.')));
       }
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() {
+        _isUploadingImage = true;
+      });
+
+      final User? user = _supabase.auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Generate unique filename
+      final String fileName =
+          '${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String filePath = 'profiles/$fileName';
+
+      // Upload image to Supabase Storage
+      late String uploadedPath;
+
+      if (kIsWeb) {
+        // For web, read as bytes
+        final Uint8List imageBytes = await pickedFile.readAsBytes();
+        uploadedPath = await _supabase.storage
+            .from('avatars')
+            .uploadBinary(filePath, imageBytes);
+      } else {
+        // For mobile, upload file directly
+        final File imageFile = File(pickedFile.path);
+        uploadedPath = await _supabase.storage
+            .from('avatars')
+            .upload(filePath, imageFile);
+      }
+
+      // Get public URL
+      final String publicUrl = _supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+      // Update user profile with new image URL
+      await _updateUserData('profile_image_url', publicUrl);
+
+      setState(() {
+        _profileImageUrl = publicUrl;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile picture updated!')));
+    } catch (e) {
+      print('Error uploading image: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+    } finally {
+      setState(() {
+        _isUploadingImage = false;
+      });
+    }
+  }
+
+  Future<void> _showImageSourceDialog() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Image Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromSource(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromSource(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImageFromSource(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() {
+        _isUploadingImage = true;
+      });
+
+      final User? user = _supabase.auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Delete old image if exists
+      if (_profileImageUrl != null) {
+        try {
+          final String oldFileName = _profileImageUrl!.split('/').last;
+          await _supabase.storage.from('avatars').remove([
+            'profiles/$oldFileName',
+          ]);
+        } catch (e) {
+          print('Error deleting old image: $e');
+        }
+      }
+
+      // Generate unique filename
+      final String fileName =
+          '${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String filePath = 'profiles/$fileName';
+
+      // Upload image to Supabase Storage
+      late String uploadedPath;
+
+      if (kIsWeb) {
+        // For web, read as bytes
+        final Uint8List imageBytes = await pickedFile.readAsBytes();
+        uploadedPath = await _supabase.storage
+            .from('avatars')
+            .uploadBinary(filePath, imageBytes);
+      } else {
+        // For mobile, upload file directly
+        final File imageFile = File(pickedFile.path);
+        uploadedPath = await _supabase.storage
+            .from('avatars')
+            .upload(filePath, imageFile);
+      }
+
+      // Get public URL
+      final String publicUrl = _supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+      // Update user profile with new image URL
+      await _updateUserData('profile_image_url', publicUrl);
+
+      setState(() {
+        _profileImageUrl = publicUrl;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile picture updated!')));
+    } catch (e) {
+      print('Error uploading image: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+    } finally {
+      setState(() {
+        _isUploadingImage = false;
+      });
     }
   }
 
@@ -146,12 +352,53 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
                 ),
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: AppColors.paleGray,
-                      backgroundImage: const AssetImage(
-                        'assets/images/onboarding_1.png',
-                      ),
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: AppColors.paleGray,
+                          backgroundImage:
+                              _profileImageUrl != null
+                                  ? NetworkImage(_profileImageUrl!)
+                                  : const AssetImage(
+                                        'assets/images/onboarding_1.png',
+                                      )
+                                      as ImageProvider,
+                          child:
+                              _isUploadingImage
+                                  ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  )
+                                  : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap:
+                                _isUploadingImage
+                                    ? null
+                                    : _showImageSourceDialog,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.leafGreen,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 15),
                     Row(
@@ -220,7 +467,6 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
                       style: TextStyle(fontSize: 16, color: AppColors.dimGray),
                     ),
                     const SizedBox(height: 30),
-
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
@@ -249,7 +495,7 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
                                       _isEditingAboutMe = !_isEditingAboutMe;
                                       if (!_isEditingAboutMe) {
                                         _updateUserData(
-                                          'aboutMe',
+                                          'about_me',
                                           _aboutMeController.text,
                                         );
                                         _aboutMeText = _aboutMeController.text;
@@ -297,7 +543,6 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
