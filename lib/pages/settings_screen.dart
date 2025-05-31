@@ -1,7 +1,7 @@
 import 'package:dish_dash/pages/auth/login_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:dish_dash/colors/app_colors.dart'; // Ensure this path is correct
+import 'package:dish_dash/colors/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Ensure this path is correct
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -72,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               text: 'Sign Out',
               onTap: () async {
                 try {
-                  await FirebaseAuth.instance.signOut();
+                  await Supabase.instance.client.auth.signOut();
                   // The 'mounted' check is now valid because _SettingsScreenState is a State object.
                   if (mounted) {
                     Navigator.pushReplacement(
