@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/pages/auth/register_screen.dart';
 import 'package:dish_dash/pages/auth/reset_password.dart';
 import 'package:dish_dash/pages/main_tab_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+
+// You can now remove this import as it's no longer used in this file
+// import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,32 +33,50 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      // --- SUPABASE LOGIN CALL ---
+      final AuthResponse response = await Supabase.instance.client.auth
+          .signInWithPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
 
-      // If login is successful, navigate to MainTabScreen
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainTabScreen()),
-        );
+      // Supabase signInWithPassword returns an AuthResponse.
+      // If successful, 'session' and 'user' will not be null.
+      if (response.user != null) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainTabScreen()),
+          );
+        }
+      } else {
+        // This 'else' block might be hit if the email is unconfirmed,
+        // or other non-exception errors occur. Supabase errors are usually
+        // thrown as AuthException.
+        // For simplicity, we'll let the catch block handle most errors.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Prijava ni uspela. Preverite poverilnice.'),
+            ),
+          );
+        }
       }
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       String message;
-      if (e.code == 'user-not-found') {
+      // Supabase AuthException codes can be different from Firebase.
+      // Common ones include 'invalid_credentials', 'email_not_confirmed', etc.
+      // You might need to check Supabase documentation for exact error codes
+      // or inspect 'e.message' for more specific handling.
+      if (e.message.contains('Invalid login credentials')) {
+        message = 'Napačen e-poštni naslov ali geslo.'; // Invalid credentials
+      } else if (e.message.contains('Email not confirmed')) {
         message =
-            'Ni uporabnika s tem e-poštnim naslovom.'; // No user found for that email.
-      } else if (e.code == 'wrong-password') {
-        message =
-            'Napačno geslo, poskusite znova.'; // Wrong password provided for that user.
-      } else if (e.code == 'invalid-email') {
-        message =
-            'E-poštni naslov ni pravilno oblikovan.'; // The email address is badly formatted.
+            'E-poštni naslov ni potrjen. Preverite svoj nabiralnik.'; // Email not confirmed
       } else {
         message = 'Napaka pri prijavi: ${e.message}'; // Generic error message
       }
+
       if (mounted) {
         ScaffoldMessenger.of(
           context,

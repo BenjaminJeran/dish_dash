@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/pages/splash_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Supabase.initialize(
+    url: 'https://hpeuvvghrjvtikkgdnql.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZXV2dmdocmp2dGlra2dkbnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTc5NzcsImV4cCI6MjA2NDI5Mzk3N30.X9WE_VvUhjF9ZU6FSDosCJda0mkqd_e1sjdJYt2haxo',
+  );
   runApp(const MyApp());
 }
 

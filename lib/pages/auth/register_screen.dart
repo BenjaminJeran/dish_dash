@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+
+// You can now remove this import as it's no longer used in this file
+// import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -32,11 +35,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Check if passwords match
       if (_passwordController.text.trim() !=
           _confirmPasswordController.text.trim()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gesli se ne ujemata.'),
-          ), // Passwords do not match.
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gesli se ne ujemata.'), // Passwords do not match.
+            ),
+          );
+        }
         return;
       }
 
@@ -45,30 +50,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       try {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+        // --- SUPABASE REGISTRATION CALL ---
+        final AuthResponse response = await Supabase.instance.client.auth
+            .signUp(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            );
 
-        // If registration is successful, show a success message and pop back to login
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registracija uspešna! Sedaj se lahko prijavite.'),
-            ), // Registration successful! You can now log in.
-          );
-          Navigator.pop(context); // Go back to the login screen
+        // Supabase signUp requires email confirmation by default.
+        // The user object might be null or contain the user depending on the email confirmation settings.
+        // It's good practice to inform the user about email verification.
+
+        if (response.user != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Registracija uspešna! Prosimo, preverite e-pošto za potrditev.',
+                ), // Registration successful! Please check your email for confirmation.
+              ),
+            );
+            Navigator.pop(context); // Go back to the login screen
+          }
+        } else {
+          // This else block might be hit if the user is created but no session is returned
+          // because email confirmation is required.
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Registracija uspešna, vendar se niste prijavili. Preverite e-pošto za potrditev.',
+                ), // Registration successful, but not logged in. Check email for confirmation.
+              ),
+            );
+            Navigator.pop(context);
+          }
         }
-      } on FirebaseAuthException catch (e) {
+      } on AuthException catch (e) {
         String message;
-        if (e.code == 'weak-password') {
-          message = 'Geslo je prešibko.'; // The password provided is too weak.
-        } else if (e.code == 'email-already-in-use') {
+        // Supabase AuthException codes for registration might include:
+        // 'User already registered', 'Email rate limit exceeded', 'Invalid email'
+        if (e.message.contains('User already registered')) {
           message =
-              'E-poštni naslov je že v uporabi.'; // The account already exists for that email.
-        } else if (e.code == 'invalid-email') {
+              'E-poštni naslov je že v uporabi.'; // The email address is already in use.
+        } else if (e.message.contains('Email rate limit exceeded')) {
+          message =
+              'Preveč poskusov registracije. Poskusite znova kasneje.'; // Too many registration attempts. Try again later.
+        } else if (e.message.contains('Invalid email')) {
           message =
               'E-poštni naslov ni pravilno oblikovan.'; // The email address is badly formatted.
+        } else if (e.message.contains(
+          'Password should be at least 6 characters',
+        )) {
+          message =
+              'Geslo mora imeti vsaj 6 znakov.'; // Password must be at least 6 characters.
         } else {
           message =
               'Napaka pri registraciji: ${e.message}'; // Generic error message
