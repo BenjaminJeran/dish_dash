@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:dish_dash/colors/app_colors.dart';
+import 'package:dish_dash/colors/app_colors.dart'; // Assuming this path is correct
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 
 class CreateRecipeScreen extends StatefulWidget {
   const CreateRecipeScreen({super.key});
@@ -11,6 +12,9 @@ class CreateRecipeScreen extends StatefulWidget {
 }
 
 class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
+  // Supabase client instance
+  final SupabaseClient supabase = Supabase.instance.client;
+
   // Text editing controllers for your input fields
   final TextEditingController _recipeNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -29,6 +33,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
   // Variable to store the selected image path (for display/upload later)
   XFile? _selectedImage;
+
+  // State to manage loading indicator during submission
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -50,16 +57,66 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         _selectedImage = image;
       });
       print('Image selected: ${image.path}');
-      // Here you might want to display a preview of the image
+    }
+  }
+
+  // Function to upload image to Supabase Storage
+  Future<String?> _uploadImageToSupabaseStorage(XFile imageFile) async {
+    try {
+      // Generate a unique file name for the image
+      final String fileName =
+          '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Upload the image to the 'recipe-images' bucket
+      // Ensure you have a bucket named 'recipe-images' in your Supabase Storage
+      final String publicUrl = await supabase.storage
+          .from('recipe-images') // Replace with your bucket name
+          .upload(
+            fileName,
+            File(imageFile.path),
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+          );
+
+      // Get the public URL of the uploaded image
+      final String imageUrl = supabase.storage
+          .from('recipe-images')
+          .getPublicUrl(fileName);
+
+      return imageUrl;
+    } on StorageException catch (e) {
+      print('Supabase Storage Error: ${e.message}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Napaka pri nalaganju slike: ${e.message}',
+          ), // Error uploading image
+        ),
+      );
+      return null;
+    } catch (e) {
+      print('General Image Upload Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Nepričakovana napaka pri nalaganju slike.',
+          ), // Unexpected error uploading image
+        ),
+      );
+      return null;
     }
   }
 
   // Function to handle adding the recipe
-  void _addRecipe() {
+  Future<void> _addRecipe() async {
+    setState(() {
+      _isLoading = true; // Show loading indicator
+    });
+
     final recipeName = _recipeNameController.text.trim();
     final description = _descriptionController.text.trim();
     final ingredients = _ingredientsController.text.trim();
     final category = _selectedCategory;
+    final userId = supabase.auth.currentUser?.id; // Get current user ID
 
     // Basic validation
     if (recipeName.isEmpty ||
@@ -72,42 +129,114 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
           content: Text('Prosim izpolnite vsa polja in izberite sliko.'),
         ), // Please fill all fields and select an image.
       );
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
-    // TODO: Implement actual logic to save the recipe to your backend
-    // This will involve:
-    // 1. Uploading _selectedImage to Firebase Storage/Supabase Storage
-    // 2. Getting the image URL
-    // 3. Saving recipe data (name, description, ingredients, category, image URL, user ID) to Firestore/Supabase Database
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Uporabnik ni prijavljen. Prosim prijavite se.',
+          ), // User not logged in. Please log in.
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
-    print('Submitting Recipe:');
-    print('  Name: $recipeName');
-    print('  Description: $description');
-    print('  Ingredients: $ingredients');
-    print('  Category: $category');
-    print('  Image Path: ${_selectedImage?.path}');
+    String? imageUrl;
+    // 1. Upload _selectedImage to Supabase Storage
+    try {
+      imageUrl = await _uploadImageToSupabaseStorage(_selectedImage!);
+      if (imageUrl == null) {
+        // Image upload failed, return early
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+    } catch (e) {
+      print('Error during image upload: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Napaka pri nalaganju slike.'), // Error uploading image
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
-    // Show a success message and/or navigate back
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Recept uspešno dodan!'),
-      ), // Recipe successfully added!
-    );
+    // 2. Save recipe data to Supabase Database
+    try {
+      await supabase.from('recipes').insert({
+        // Replace 'recipes' with your table name
+        'name': recipeName,
+        'description': description,
+        'ingredients': ingredients,
+        'category': category,
+        'image_url': imageUrl,
+        'user_id': userId, // Associate recipe with the current user
+        'created_at': DateTime.now().toIso8601String(), // Add a timestamp
+      });
 
-    // Clear fields after successful submission (optional)
-    _recipeNameController.clear();
-    _descriptionController.clear();
-    _ingredientsController.clear();
-    setState(() {
-      _selectedCategory = null;
-      _selectedImage = null;
-    });
+      print('Submitting Recipe:');
+      print('  Name: $recipeName');
+      print('  Description: $description');
+      print('  Ingredients: $ingredients');
+      print('  Category: $category');
+      print('  Image URL: $imageUrl');
+      print('  User ID: $userId');
 
-    // Navigate back to previous screen or home feed after a short delay
-    // Future.delayed(const Duration(seconds: 2), () {
-    //   Navigator.pop(context);
-    // });
+      // Show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Recept uspešno dodan!'),
+        ), // Recipe successfully added!
+      );
+
+      // Clear fields after successful submission
+      _recipeNameController.clear();
+      _descriptionController.clear();
+      _ingredientsController.clear();
+      setState(() {
+        _selectedCategory = null;
+        _selectedImage = null;
+      });
+
+      // Navigate back to previous screen or home feed after a short delay
+      // Future.delayed(const Duration(seconds: 2), () {
+      //   Navigator.pop(context);
+      // });
+    } on PostgrestException catch (e) {
+      print('Supabase Database Error: ${e.message}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Napaka pri shranjevanju recepta: ${e.message}',
+          ), // Error saving recipe
+        ),
+      );
+    } catch (e) {
+      print('General Recipe Save Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Nepričakovana napaka pri shranjevanju recepta.',
+          ), // Unexpected error saving recipe
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loading indicator
+      });
+    }
   }
 
   // Helper method to build consistent input fields
@@ -317,12 +446,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
             // "Add Recipe" Button
             ElevatedButton(
-              onPressed: _addRecipe,
+              onPressed:
+                  _isLoading ? null : _addRecipe, // Disable button when loading
               style: ElevatedButton.styleFrom(
-                // Remove backgroundColor: Colors.transparent
-                // Remove shadowColor: Colors.transparent
-                // Remove padding: EdgeInsets.zero
-                // The theme will handle these now!
                 minimumSize: const Size(
                   double.infinity,
                   50,
@@ -331,16 +457,21 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                'Dodaj recept',
-                style: TextStyle(
-                  color:
-                      AppColors
-                          .white, // Keep text color white if that's your design
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child:
+                  _isLoading
+                      ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      ) // Show loading spinner
+                      : const Text(
+                        'Dodaj recept',
+                        style: TextStyle(
+                          color:
+                              AppColors
+                                  .white, // Keep text color white if that's your design
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
             ),
           ],
         ),

@@ -35,42 +35,37 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ),
         );
       }
-      return; // Exit if user is not logged in
+      return;
     }
 
     if (newItemName.isNotEmpty) {
       try {
-        final currentUserId = userId!; // Assert userId is not null here
+        final currentUserId = userId!;
 
-        // First, check if the item already exists for this user
         final List<Map<String, dynamic>> existingItems = await _supabase
             .from('shopping_items')
             .select()
-            .eq('user_id', currentUserId) // Use the asserted non-null userId
+            .eq('user_id', currentUserId)
             .eq('name', newItemName)
             .limit(1);
 
+        // Ce obstaja že element z istim imenom, povečaj količino
         if (existingItems.isNotEmpty) {
-          // Item exists, increment quantity
           final existingItemData = existingItems.first;
           final currentQuantity = existingItemData['quantity'] as int;
           await _supabase
               .from('shopping_items')
               .update({'quantity': currentQuantity + 1})
               .eq('id', existingItemData['id'])
-              .eq(
-                'user_id',
-                currentUserId,
-              ); // Also ensure update is for the correct user
+              .eq('user_id', currentUserId);
         } else {
-          // Item does not exist, insert new item
+          // Dodaj nov element
           final newItem = ShoppingListItem(name: newItemName);
           await _supabase.from('shopping_items').insert({
-            'user_id': currentUserId, // Attach item to the current user
+            'user_id': currentUserId,
             'name': newItem.name,
             'quantity': newItem.quantity,
             'is_checked': newItem.isChecked,
-            // 'created_at' is handled by database default now()
           });
         }
         _newItemController.clear();
@@ -86,13 +81,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _deleteItem(String itemId) async {
-    // Ensure userId is not null before proceeding
     if (userId == null) return;
 
     try {
       final currentUserId = userId!;
 
-      // Show loading indicator or disable UI temporarily
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -110,12 +103,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
       // Optional: Show success message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item deleted successfully'),
-            duration: Duration(seconds: 1),
-          ),
-        );
+        _refreshList();
       }
     } catch (e) {
       if (mounted) {
@@ -128,14 +116,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _refreshList() async {
-    // Force refresh by recreating the stream
-    setState(() {
-      // This will trigger a rebuild and refresh the StreamBuilder
-    });
+    // Forcammo rebuild streambuilderja - ni šlo drgač za delete
+    setState(() {});
   }
 
   Future<void> _incrementQuantity(ShoppingListItem item) async {
-    // Ensure userId and item.id are not null before proceeding
     if (userId == null || item.id == null) return;
     try {
       final currentUserId = userId!;
@@ -157,7 +142,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _decrementQuantity(ShoppingListItem item) async {
-    // Ensure userId and item.id are not null before proceeding
     if (userId == null || item.id == null) return;
     try {
       final currentUserId = userId!;
@@ -183,7 +167,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _toggleChecked(ShoppingListItem item) async {
-    // Ensure userId and item.id are not null before proceeding
     if (userId == null || item.id == null) return;
     try {
       final currentUserId = userId!;
@@ -206,8 +189,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Create a local non-nullable variable for userId at the start of build
-    // if userId is not null. This promotes the type.
     final String? currentUserId = userId;
 
     return Scaffold(
