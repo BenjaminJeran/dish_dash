@@ -12,15 +12,12 @@ class CreateRecipeScreen extends StatefulWidget {
 }
 
 class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
-  // Supabase client instance
   final SupabaseClient supabase = Supabase.instance.client;
 
-  // Text editing controllers for your input fields
   final TextEditingController _recipeNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _ingredientsController = TextEditingController();
 
-  // For the dropdown category
   String? _selectedCategory;
   final List<String> _categories = [
     'Zajtrk', // Breakfast
@@ -31,10 +28,8 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     'Drugo', // Other
   ];
 
-  // Variable to store the selected image path (for display/upload later)
   XFile? _selectedImage;
 
-  // State to manage loading indicator during submission
   bool _isLoading = false;
 
   @override
@@ -45,12 +40,43 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     super.dispose();
   }
 
-  // Function to handle image picking
+  // Modified _pickImage function to show a choice dialog
   Future<void> _pickImage() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Izberi vir slike'), // Choose image source
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galerija'), // Gallery
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _getImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Kamera'), // Camera
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _getImage(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // New helper function to get image from specified source
+  Future<void> _getImage(ImageSource source) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-    ); // You can also use ImageSource.camera
+    final XFile? image = await picker.pickImage(source: source);
 
     if (image != null) {
       setState(() {
@@ -69,7 +95,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
       // Upload the image to the 'recipe-images' bucket
       // Ensure you have a bucket named 'recipe-images' in your Supabase Storage
-      final String publicUrl = await supabase.storage
+      await supabase.storage
           .from('recipe-images') // Replace with your bucket name
           .upload(
             fileName,
@@ -187,12 +213,12 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       });
 
       print('Submitting Recipe:');
-      print('  Name: $recipeName');
-      print('  Description: $description');
-      print('  Ingredients: $ingredients');
-      print('  Category: $category');
-      print('  Image URL: $imageUrl');
-      print('  User ID: $userId');
+      print('   Name: $recipeName');
+      print('   Description: $description');
+      print('   Ingredients: $ingredients');
+      print('   Category: $category');
+      print('   Image URL: $imageUrl');
+      print('   User ID: $userId');
 
       // Show a success message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -400,7 +426,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 Expanded(
                   flex: 2, // Image button takes less space
                   child: ElevatedButton.icon(
-                    onPressed: _pickImage,
+                    onPressed: _pickImage, // This will now open the dialog
                     icon: Icon(
                       Icons.upload_file,
                       color: AppColors.charcoal,

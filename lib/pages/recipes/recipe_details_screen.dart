@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart'; // Import the Recipe model
 import 'package:dish_dash/pages/profile_page_screen.dart'; // For the profile icon navigation
-import 'package:dish_dash/pages/recipes/shopping_list_screen.dart'; // To add items to shopping list
 
 class RecipeDetailsScreen extends StatelessWidget {
   final Recipe recipe;
@@ -47,7 +46,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: Image.asset(
-                    recipe.imageUrl,
+                    recipe.imageUrl ?? "",
                     width: double.infinity,
                     height: 250,
                     fit: BoxFit.cover,
@@ -117,7 +116,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
                   Text(
-                    recipe.description,
+                    recipe.description ?? '',
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.charcoal,
@@ -135,7 +134,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children:
                           recipe.ingredients
-                              .map(
+                              ?.map(
                                 (ingredient) => Padding(
                                   padding: const EdgeInsets.only(bottom: 4.0),
                                   child: Text(
@@ -147,7 +146,8 @@ class RecipeDetailsScreen extends StatelessWidget {
                                   ),
                                 ),
                               )
-                              .toList(),
+                              .toList() ??
+                          [],
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -160,7 +160,8 @@ class RecipeDetailsScreen extends StatelessWidget {
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children:
-                          recipe.instructions.asMap().entries.map((entry) {
+                          recipe.instructions?.asMap().entries.map((entry) {
+                            // Added '?' for null safety
                             int idx = entry.key;
                             String instruction = entry.value;
                             return Padding(
@@ -173,7 +174,8 @@ class RecipeDetailsScreen extends StatelessWidget {
                                 ),
                               ),
                             );
-                          }).toList(),
+                          }).toList() ??
+                          [],
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -214,7 +216,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                         print('Dodaj v košarico pressed for ${recipe.name}');
                         // TODO: Implement logic to add ingredients to the shopping list
                         // For demonstration, let's just add the first ingredient
-                        if (recipe.ingredients.isNotEmpty) {
+                        if (recipe.ingredients?.isNotEmpty == true) {
                           // This is a simple example; a more robust solution would
                           // parse ingredients (e.g., "2 jajca" into "jajca" and quantity 2)
                           // and add them to a shared state or database for the shopping list.
@@ -222,13 +224,11 @@ class RecipeDetailsScreen extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Dodano v nakupovalni seznam: ${recipe.ingredients.join(', ')}',
+                                'Dodano v nakupovalni seznam: ${recipe.ingredients?.join(', ') ?? ''}',
                               ),
                               duration: const Duration(seconds: 2),
                             ),
                           );
-                          // You might want to navigate to the shopping list screen or update it
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => const ShoppingListScreen()));
                         }
                       },
                       child: Text(
