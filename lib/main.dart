@@ -36,11 +36,7 @@ class MyApp extends StatelessWidget {
           onSecondary: AppColors.charcoal,
           onSurface: AppColors.charcoal,
           onError: AppColors.white,
-        ).copyWith(
-          // Ensure consistent usage of your neutral colors where appropriate
-          tertiary: AppColors.oliveGreen,
-          onTertiary: AppColors.white,
-        ),
+        ).copyWith(tertiary: AppColors.oliveGreen, onTertiary: AppColors.white),
 
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
@@ -51,14 +47,13 @@ class MyApp extends StatelessWidget {
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
-          centerTitle: true, // Center the title by default if you want
+          centerTitle: true,
         ),
 
-        // Define Input Field Theme for consistency (TextFormField will pick this up)
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.paleGray, // Background color for input fields
-          border: InputBorder.none, // Removes default underline
+          fillColor: AppColors.paleGray,
+          border: InputBorder.none,
           enabledBorder: OutlineInputBorder(
             // Border when enabled but not focused
             borderRadius: BorderRadius.circular(10),
