@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
-import 'package:dish_dash/models/recipe.dart'; // Import the Recipe model
-import 'package:dish_dash/pages/profile_page_screen.dart'; // For the profile icon navigation
+import 'package:dish_dash/models/recipe.dart'; 
+import 'package:dish_dash/pages/profile_page_screen.dart'; 
 
 class RecipeDetailsScreen extends StatelessWidget {
   final Recipe recipe;
@@ -45,12 +45,35 @@ class RecipeDetailsScreen extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    recipe.imageUrl ?? "",
-                    width: double.infinity,
-                    height: 250,
-                    fit: BoxFit.cover,
-                  ),
+                  child: recipe.imageUrl.startsWith('http')
+                      ? Image.network( 
+                          recipe.imageUrl,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container( 
+                                width: double.infinity,
+                                height: 250,
+                                color: AppColors.paleGray,
+                                child: Icon(Icons.broken_image,
+                                    color: AppColors.dimGray, size: 50),
+                              ),
+                        )
+                      : Image.asset(
+                          recipe.imageUrl,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container( 
+                                width: double.infinity,
+                                height: 250,
+                                color: AppColors.paleGray,
+                                child: Icon(Icons.image_not_supported,
+                                    color: AppColors.dimGray, size: 50),
+                              ),
+                        ),
                 ),
                 Positioned(
                   top: 10,
@@ -114,9 +137,27 @@ class RecipeDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                 
+                  if (recipe.category.isNotEmpty) 
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.category, size: 20, color: AppColors.dimGray),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Kategorija: ${recipe.category}', 
+                            style: TextStyle(
+                              color: AppColors.dimGray,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: 15),
                   Text(
-                    recipe.description ?? '',
+                    recipe.description, 
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.charcoal,
@@ -125,16 +166,15 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  // "Pripravi hrano" - Ingredients
+                  
                   _buildStepCard(
                     context,
                     stepNumber: 1,
-                    title: 'Sestavine', // Ingredients
+                    title: 'Sestavine',
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          recipe.ingredients
-                              ?.map(
+                      children: recipe.ingredients
+                              .map(
                                 (ingredient) => Padding(
                                   padding: const EdgeInsets.only(bottom: 4.0),
                                   child: Text(
@@ -146,46 +186,42 @@ class RecipeDetailsScreen extends StatelessWidget {
                                   ),
                                 ),
                               )
-                              .toList() ??
-                          [],
+                              .toList(),
                     ),
                   ),
                   const SizedBox(height: 15),
 
-                  // "Pripravi hrano" - Instructions
+                
                   _buildStepCard(
                     context,
                     stepNumber: 2,
-                    title: 'Navodila za pripravo', // Preparation Instructions
+                    title: 'Navodila za pripravo', 
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          recipe.instructions?.asMap().entries.map((entry) {
-                            // Added '?' for null safety
-                            int idx = entry.key;
-                            String instruction = entry.value;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
-                                '${idx + 1}. $instruction',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.charcoal,
-                                ),
-                              ),
-                            );
-                          }).toList() ??
-                          [],
+                      children: recipe.instructions.asMap().entries.map((entry) {
+                        int idx = entry.key;
+                        String instruction = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Text(
+                            '${idx + 1}. $instruction',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.charcoal,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                   const SizedBox(height: 30),
 
-                  // Uredi Button
+                  // Edit Button
                   Center(
                     child: ElevatedButton(
                       onPressed: () {
                         print('Uredi button pressed for ${recipe.name}');
-                        // TODO: Navigate to an edit recipe screen or show edit options
+                        // TODO
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.leafGreen,
@@ -209,24 +245,27 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                  // "Dodaj v košarico" (Add to cart) Button/Text
+                  // "Add to cart" (Dodaj v košarico) Button/Text
                   Center(
                     child: GestureDetector(
                       onTap: () {
                         print('Dodaj v košarico pressed for ${recipe.name}');
-                        // TODO: Implement logic to add ingredients to the shopping list
-                        // For demonstration, let's just add the first ingredient
-                        if (recipe.ingredients?.isNotEmpty == true) {
-                          // This is a simple example; a more robust solution would
-                          // parse ingredients (e.g., "2 jajca" into "jajca" and quantity 2)
-                          // and add them to a shared state or database for the shopping list.
-                          // For now, let's just show a snackbar or navigate.
+                        if (recipe.ingredients.isNotEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Dodano v nakupovalni seznam: ${recipe.ingredients?.join(', ') ?? ''}',
+                                'Dodano v nakupovalni seznam: ${recipe.ingredients.join(', ')}',
                               ),
                               duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Ni sestavin za dodati v nakupovalni seznam.', 
+                              ),
+                              duration: Duration(seconds: 2),
                             ),
                           );
                         }
@@ -255,11 +294,11 @@ class RecipeDetailsScreen extends StatelessWidget {
     BuildContext context, {
     required int stepNumber,
     required String title,
-    required Widget content, // Changed to Widget to allow flexible content
+    required Widget content,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.leafGreen.withOpacity(0.1), // Light green background
+        color: AppColors.leafGreen.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.all(20),
@@ -298,7 +337,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                content, // Dynamic content (ingredients or instructions)
+                content, 
               ],
             ),
           ),

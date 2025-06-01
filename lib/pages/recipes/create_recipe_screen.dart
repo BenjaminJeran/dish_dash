@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:dish_dash/colors/app_colors.dart'; // Assuming this path is correct
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+import 'package:dish_dash/colors/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateRecipeScreen extends StatefulWidget {
   const CreateRecipeScreen({super.key});
@@ -17,19 +17,21 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
   final TextEditingController _recipeNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _ingredientsController = TextEditingController();
+  final TextEditingController _instructionsController = TextEditingController(); 
+  final TextEditingController _cookingTimeController = TextEditingController(); 
+  final TextEditingController _servingsController = TextEditingController();    
 
   String? _selectedCategory;
   final List<String> _categories = [
-    'Zajtrk', // Breakfast
-    'Kosilo', // Lunch
-    'Večerja', // Dinner
-    'Sladica', // Dessert
-    'Prigrizek', // Snack
-    'Drugo', // Other
+    'Zajtrk', 
+    'Kosilo',
+    'Večerja', 
+    'Sladica', 
+    'Prigrizek',
+    'Drugo', 
   ];
 
   XFile? _selectedImage;
-
   bool _isLoading = false;
 
   @override
@@ -37,22 +39,25 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     _recipeNameController.dispose();
     _descriptionController.dispose();
     _ingredientsController.dispose();
+    _instructionsController.dispose(); 
+    _cookingTimeController.dispose(); 
+    _servingsController.dispose();     
     super.dispose();
   }
 
-  // Modified _pickImage function to show a choice dialog
+  // Zberemo od kot bomo vzel sliko
   Future<void> _pickImage() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Izberi vir slike'), // Choose image source
+          title: const Text('Izberi vir slike'), 
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Galerija'), // Gallery
+                title: const Text('Galerija'), 
                 onTap: () {
                   Navigator.of(context).pop();
                   _getImage(ImageSource.gallery);
@@ -60,7 +65,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text('Kamera'), // Camera
+                title: const Text('Kamera'), 
                 onTap: () {
                   Navigator.of(context).pop();
                   _getImage(ImageSource.camera);
@@ -73,7 +78,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     );
   }
 
-  // New helper function to get image from specified source
+  // Dobimo sliko iz izbranega vira
   Future<void> _getImage(ImageSource source) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: source);
@@ -86,24 +91,20 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     }
   }
 
-  // Function to upload image to Supabase Storage
+
   Future<String?> _uploadImageToSupabaseStorage(XFile imageFile) async {
     try {
-      // Generate a unique file name for the image
       final String fileName =
           '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      // Upload the image to the 'recipe-images' bucket
-      // Ensure you have a bucket named 'recipe-images' in your Supabase Storage
       await supabase.storage
-          .from('recipe-images') // Replace with your bucket name
+          .from('recipe-images')
           .upload(
             fileName,
             File(imageFile.path),
             fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
           );
 
-      // Get the public URL of the uploaded image
       final String imageUrl = supabase.storage
           .from('recipe-images')
           .getPublicUrl(fileName);
@@ -115,7 +116,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         SnackBar(
           content: Text(
             'Napaka pri nalaganju slike: ${e.message}',
-          ), // Error uploading image
+          ), 
         ),
       );
       return null;
@@ -125,35 +126,51 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         const SnackBar(
           content: Text(
             'Nepričakovana napaka pri nalaganju slike.',
-          ), // Unexpected error uploading image
+          ),
         ),
       );
       return null;
     }
   }
 
-  // Function to handle adding the recipe
   Future<void> _addRecipe() async {
     setState(() {
-      _isLoading = true; // Show loading indicator
+      _isLoading = true; 
     });
 
     final recipeName = _recipeNameController.text.trim();
     final description = _descriptionController.text.trim();
-    final ingredients = _ingredientsController.text.trim();
-    final category = _selectedCategory;
-    final userId = supabase.auth.currentUser?.id; // Get current user ID
 
-    // Basic validation
+    // Sestavine - vsaka je v svoji vrstici - TODO!
+    final ingredientsList = _ingredientsController.text
+        .split('\n')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    final instructionsList = _instructionsController.text
+        .split('\n')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    final cookingTime = _cookingTimeController.text.trim(); 
+    final servings = _servingsController.text.trim();     
+    final category = _selectedCategory;
+    final userId = supabase.auth.currentUser?.id;
+
     if (recipeName.isEmpty ||
         description.isEmpty ||
-        ingredients.isEmpty ||
+        ingredientsList.isEmpty ||
+        instructionsList.isEmpty || 
+        cookingTime.isEmpty ||      
+        servings.isEmpty ||        
         category == null ||
         _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Prosim izpolnite vsa polja in izberite sliko.'),
-        ), // Please fill all fields and select an image.
+        ), 
       );
       setState(() {
         _isLoading = false;
@@ -166,7 +183,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         const SnackBar(
           content: Text(
             'Uporabnik ni prijavljen. Prosim prijavite se.',
-          ), // User not logged in. Please log in.
+          ), 
         ),
       );
       setState(() {
@@ -176,11 +193,11 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     }
 
     String? imageUrl;
-    // 1. Upload _selectedImage to Supabase Storage
+    
+    // Nalozmo sliko v Supabase Storage
     try {
       imageUrl = await _uploadImageToSupabaseStorage(_selectedImage!);
       if (imageUrl == null) {
-        // Image upload failed, return early
         setState(() {
           _isLoading = false;
         });
@@ -190,7 +207,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       print('Error during image upload: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Napaka pri nalaganju slike.'), // Error uploading image
+          content: Text('Napaka pri nalaganju slike.'), 
         ),
       );
       setState(() {
@@ -199,54 +216,58 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       return;
     }
 
-    // 2. Save recipe data to Supabase Database
+    // 
     try {
       await supabase.from('recipes').insert({
-        // Replace 'recipes' with your table name
         'name': recipeName,
         'description': description,
-        'ingredients': ingredients,
+        'ingredients': ingredientsList, 
+        'instructions': instructionsList,
+        'cooking_time': cookingTime, 
+        'servings': servings,       
         'category': category,
         'image_url': imageUrl,
-        'user_id': userId, // Associate recipe with the current user
-        'created_at': DateTime.now().toIso8601String(), // Add a timestamp
+        'user_id': userId,
+        'created_at': DateTime.now().toIso8601String(),
       });
 
       print('Submitting Recipe:');
       print('   Name: $recipeName');
       print('   Description: $description');
-      print('   Ingredients: $ingredients');
+      print('   Ingredients: $ingredientsList'); 
+      print('   Instructions: $instructionsList'); 
+      print('   Cooking Time: $cookingTime');
+      print('   Servings: $servings');
       print('   Category: $category');
       print('   Image URL: $imageUrl');
       print('   User ID: $userId');
 
-      // Show a success message
+     
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Recept uspešno dodan!'),
-        ), // Recipe successfully added!
+        ), 
       );
 
-      // Clear fields after successful submission
+      
       _recipeNameController.clear();
       _descriptionController.clear();
       _ingredientsController.clear();
+      _instructionsController.clear(); 
+      _cookingTimeController.clear(); 
+      _servingsController.clear();     
       setState(() {
         _selectedCategory = null;
         _selectedImage = null;
       });
 
-      // Navigate back to previous screen or home feed after a short delay
-      // Future.delayed(const Duration(seconds: 2), () {
-      //   Navigator.pop(context);
-      // });
     } on PostgrestException catch (e) {
       print('Supabase Database Error: ${e.message}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Napaka pri shranjevanju recepta: ${e.message}',
-          ), // Error saving recipe
+          ), 
         ),
       );
     } catch (e) {
@@ -255,17 +276,16 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         const SnackBar(
           content: Text(
             'Nepričakovana napaka pri shranjevanju recepta.',
-          ), // Unexpected error saving recipe
+          ), 
         ),
       );
     } finally {
       setState(() {
-        _isLoading = false; // Hide loading indicator
+        _isLoading = false; 
       });
     }
   }
 
-  // Helper method to build consistent input fields
   Widget _buildInputField({
     required TextEditingController controller,
     required String hintText,
@@ -275,8 +295,8 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.paleGray, // Using your defined pale gray
-        borderRadius: BorderRadius.circular(10), // Rounded corners
+        color: AppColors.paleGray,
+        borderRadius: BorderRadius.circular(10),
       ),
       child: TextField(
         controller: controller,
@@ -287,14 +307,14 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
           hintText: hintText,
           hintStyle: TextStyle(
             color: AppColors.dimGray,
-          ), // Using dim gray for hint text
+          ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 15,
           ),
-          border: InputBorder.none, // Removes default underline
+          border: InputBorder.none,
         ),
-        style: TextStyle(color: AppColors.charcoal), // Text input color
+        style: TextStyle(color: AppColors.charcoal),
       ),
     );
   }
@@ -302,12 +322,11 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // --- AppBar ---
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Go back to the previous screen
+            Navigator.pop(context);
           },
         ),
         title: Center(child: Image.asset('assets/logo.png', height: 80)),
@@ -315,80 +334,102 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              // TODO: Navigate to profile screen
               print('Profile icon pressed');
             },
           ),
         ],
-        elevation: 0, // No shadow under app bar
-        backgroundColor: Colors.transparent, // Transparent background
-        foregroundColor: AppColors.charcoal, // Color for icons in app bar
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.charcoal,
       ),
-      // --- Body Content ---
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(
-          20.0,
-        ), // Padding around the entire content
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start, // Align text to the start
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Ustvari recept', // "Create recipe" in Slovenian
+              'Ustvari recept',
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
-                color: AppColors.charcoal, // Title color
+                color: AppColors.charcoal,
               ),
             ),
-            const SizedBox(height: 30), // Space after title
-            // Recipe Name Input Field
+            const SizedBox(height: 30),
+
             _buildInputField(
               controller: _recipeNameController,
-              hintText:
-                  'Ime recepta', // "Recipe Name" in Slovenian (more descriptive)
+              hintText: 'Ime recepta',
               keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 20),
 
-            // Description/Instructions Input Field (from screenshot "Naziv" again, assuming it's for description)
             _buildInputField(
               controller: _descriptionController,
-              hintText:
-                  'Opis recepta / Navodila', // "Recipe description / Instructions" in Slovenian
-              keyboardType: TextInputType.multiline,
-              maxLines: null, // Allows unlimited lines
-              minLines: 5, // Minimum 5 lines height
-            ),
-            const SizedBox(height: 20),
-
-            // Ingredients Input Field (assuming this is the third large "Naziv" field)
-            _buildInputField(
-              controller: _ingredientsController,
-              hintText:
-                  'Sestavine (vsako v svojo vrstico)', // "Ingredients (each on its own line)"
+              hintText: 'Kratek opis recepta',
               keyboardType: TextInputType.multiline,
               maxLines: null,
-              minLines: 4, // Adjust min lines for ingredients
+              minLines: 3,
             ),
             const SizedBox(height: 20),
 
-            // Category Dropdown and Image Upload Button Row
+            _buildInputField(
+              controller: _ingredientsController,
+              hintText: 'Sestavine (vsaka v svojo vrstico)', 
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              minLines: 4,
+            ),
+            const SizedBox(height: 20),
+
+            _buildInputField(
+              controller: _instructionsController,
+              hintText: 'Navodila za pripravo (vsak korak v svojo vrstico)', 
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              minLines: 5,
+            ),
+            const SizedBox(height: 20),
+
+           
             Row(
               children: [
                 Expanded(
-                  flex: 3, // Category takes more space
+                  child: _buildInputField(
+                    controller: _cookingTimeController,
+                    hintText: 'Čas kuhanja (npr. 30 minut)', 
+                    keyboardType: TextInputType.text, 
+                    maxLines: 1,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildInputField(
+                    controller: _servingsController,
+                    hintText: 'Št. porcij (npr. 4 osebe)', 
+                    keyboardType: TextInputType.text, 
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.paleGray, // Light grey background
+                      color: AppColors.paleGray,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
-                      // Hides the default underline
                       child: DropdownButton<String>(
                         value: _selectedCategory,
                         hint: Text(
@@ -403,46 +444,42 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                         style: TextStyle(
                           color: AppColors.charcoal,
                           fontSize: 16,
-                        ), // Text color for selected item
+                        ),
                         onChanged: (String? newValue) {
                           setState(() {
                             _selectedCategory = newValue;
                           });
                         },
-                        items:
-                            _categories.map<DropdownMenuItem<String>>((
-                              String value,
+                        items: _categories.map<DropdownMenuItem<String>>((
+                            String value,
                             ) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10), // Space between dropdown and button
+                const SizedBox(width: 10),
                 Expanded(
-                  flex: 2, // Image button takes less space
+                  flex: 2,
                   child: ElevatedButton.icon(
-                    onPressed: _pickImage, // This will now open the dialog
+                    onPressed: _pickImage,
                     icon: Icon(
                       Icons.upload_file,
                       color: AppColors.charcoal,
-                    ), // Upload icon
+                    ),
                     label: Text(
                       _selectedImage != null
                           ? 'Slika izbrana!'
-                          : 'Dodaj sliko', // "Image selected!" or "Add image"
+                          : 'Dodaj sliko',
                       style: TextStyle(color: AppColors.charcoal),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppColors.paleGray, // Light grey background
-                      foregroundColor:
-                          AppColors
-                              .charcoal, // Text and icon color (overridden by label/icon color)
+                      backgroundColor: AppColors.paleGray,
+                      foregroundColor: AppColors.charcoal,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -452,8 +489,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 ),
               ],
             ),
-            if (_selectedImage !=
-                null) // Show a small preview if an image is selected
+            if (_selectedImage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10.0),
                 child: ClipRRect(
@@ -461,7 +497,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   child: Image.file(
                     File(
                       _selectedImage!.path,
-                    ), // Use dart:io.File to display XFile
+                    ),
                     height: 100,
                     width: 100,
                     fit: BoxFit.cover,
@@ -470,34 +506,29 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               ),
             const SizedBox(height: 30),
 
-            // "Add Recipe" Button
             ElevatedButton(
-              onPressed:
-                  _isLoading ? null : _addRecipe, // Disable button when loading
+              onPressed: _isLoading ? null : _addRecipe,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(
                   double.infinity,
                   50,
-                ), // Ensures full width and fixed height
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child:
-                  _isLoading
-                      ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      ) // Show loading spinner
-                      : const Text(
-                        'Dodaj recept',
-                        style: TextStyle(
-                          color:
-                              AppColors
-                                  .white, // Keep text color white if that's your design
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+              child: _isLoading
+                  ? const CircularProgressIndicator(
+                      color: Colors.white,
+                    )
+                  : const Text(
+                      'Dodaj recept',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
             ),
           ],
         ),
