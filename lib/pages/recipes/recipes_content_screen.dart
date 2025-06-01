@@ -1,7 +1,8 @@
-// lib/pages/recipes/recipes_content_screen.dart
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dish_dash/models/recipe.dart'; 
+import 'package:dish_dash/pages/recipes/recipe_details_screen.dart'; 
 
 class RecipesContentScreen extends StatefulWidget {
   const RecipesContentScreen({super.key});
@@ -25,28 +26,27 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
       final userId = supabase.auth.currentUser?.id;
 
       if (userId == null) {
-        throw Exception('Uporabnik ni prijavljen.'); // User not logged in.
+        throw Exception('Uporabnik ni prijavljen.'); 
       }
 
-      // Fetch recipes associated with the current user ID
-      // Assuming your 'recipes' table has a 'user_id' column
+
       final List<Map<String, dynamic>> recipes = await supabase
           .from('recipes')
           .select()
-          .eq('user_id', userId) // Filter by the current user's ID
-          .order('created_at', ascending: false); // Order by creation date
+          .eq('user_id', userId) 
+          .order('created_at', ascending: false); 
 
       return recipes;
     } on PostgrestException catch (e) {
       print('Supabase Database Error fetching recipes: ${e.message}');
       throw Exception(
         'Napaka pri nalaganju receptov: ${e.message}',
-      ); // Error loading recipes
+      );
     } catch (e) {
       print('General error fetching recipes: $e');
       throw Exception(
         'Nepričakovana napaka pri nalaganju receptov.',
-      ); // Unexpected error loading recipes
+      ); 
     }
   }
 
@@ -59,7 +59,7 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(
-                color: AppColors.leafGreen, // Use your app's primary color
+                color: AppColors.leafGreen,
               ),
             );
           } else if (snapshot.hasError) {
@@ -74,7 +74,7 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Napaka: ${snapshot.error}', // Error: [error message]
+                    'Napaka: ${snapshot.error}', 
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 18, color: AppColors.tomatoRed),
                   ),
@@ -82,20 +82,19 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        _recipesFuture = _fetchRecipes(); // Retry fetching
+                        _recipesFuture = _fetchRecipes(); 
                       });
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.leafGreen,
                       foregroundColor: AppColors.white,
                     ),
-                    child: const Text('Poskusi ponovno'), // Try again
+                    child: const Text('Poskusi ponovno'),
                   ),
                 ],
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            // No recipes found or data is empty
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -103,13 +102,13 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                   Icon(Icons.menu_book, size: 80, color: AppColors.dimGray),
                   const SizedBox(height: 20),
                   Text(
-                    'Trenutno še nimate shranjenih receptov.', // "You currently have no saved recipes."
+                    'Trenutno še nimate shranjenih receptov.', 
                     style: TextStyle(fontSize: 20, color: AppColors.dimGray),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Začnite z dodajanjem svojega prvega recepta!', // "Start by adding your first recipe!"
+                    'Začnite z dodajanjem svojega prvega recepta!', 
                     style: TextStyle(fontSize: 16, color: AppColors.dimGray),
                     textAlign: TextAlign.center,
                   ),
@@ -117,20 +116,13 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
               ),
             );
           } else {
-            // Recipes are available, display them
-            final recipes = snapshot.data!;
+            final recipesData = snapshot.data!;
             return ListView.builder(
               padding: const EdgeInsets.all(16.0),
-              itemCount: recipes.length,
+              itemCount: recipesData.length,
               itemBuilder: (context, index) {
-                final recipe = recipes[index];
-                final imageUrl = recipe['image_url'];
-                final recipeName =
-                    recipe['name'] ?? 'Neznano ime'; // Unknown name
-                final description =
-                    recipe['description'] ?? 'Ni opisa.'; // No description
-                final category =
-                    recipe['category'] ?? 'Neznano'; // Unknown category
+                final recipeMap = recipesData[index];
+                final recipe = Recipe.fromMap(recipeMap);
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 10.0),
@@ -138,29 +130,28 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  // Using InkWell for a ripple effect when tapped, similar to your nav items
                   child: InkWell(
                     onTap: () {
-                      // TODO: Implement navigation to a detailed recipe view
-                      print('Recipe tapped: $recipeName');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Tapped on ${recipeName}')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecipeDetailsScreen(recipe: recipe),
+                        ),
                       );
                     },
                     borderRadius: BorderRadius.circular(
                       15,
-                    ), // Match Card's border radius
+                    ), 
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Recipe Image
-                          if (imageUrl != null && imageUrl.isNotEmpty)
+                          if (recipe.imageUrl.isNotEmpty)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
                               child: Image.network(
-                                imageUrl,
+                                recipe.imageUrl,
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
@@ -192,13 +183,12 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                               ),
                             ),
                           const SizedBox(width: 15),
-                          // Recipe Details
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  recipeName,
+                                  recipe.name,
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -209,7 +199,7 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                                 ),
                                 const SizedBox(height: 5),
                                 Text(
-                                  description,
+                                  recipe.description, 
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: AppColors.dimGray,
@@ -218,7 +208,6 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 10),
-                                // Category Tag
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
@@ -226,12 +215,11 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color:
-                                        AppColors
-                                            .leafGreen, // A lighter version of leafGreen for tags
+                                        AppColors.leafGreen.withOpacity(0.2), 
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    category,
+                                    recipe.category, 
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.charcoal,
