@@ -1,220 +1,108 @@
-import 'package:dish_dash/pages/profile_page_screen.dart';
-import 'package:dish_dash/pages/recipes/recipe_details_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:dish_dash/colors/app_colors.dart'; // Import custom colors // Import the recipe details screen
-import 'package:dish_dash/models/recipe.dart'; // Import the Recipe model
+import 'package:supabase_flutter/supabase_flutter.dart'; 
+import 'package:dish_dash/colors/app_colors.dart';
+import 'package:dish_dash/models/recipe.dart';
+import 'package:dish_dash/pages/recipes/recipe_details_screen.dart'; 
 
-class HomeContentScreen extends StatelessWidget {
+
+class HomeContentScreen extends StatefulWidget {
   const HomeContentScreen({super.key});
 
   @override
+  State<HomeContentScreen> createState() => _HomeContentScreenState();
+}
+
+class _HomeContentScreenState extends State<HomeContentScreen> {
+  final SupabaseClient supabase = Supabase.instance.client;
+  List<Recipe> _allRecipes = []; 
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAllRecipes();
+  }
+
+  Future<void> _fetchAllRecipes() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final List<Map<String, dynamic>> recipeMaps = await supabase
+          .from('recipes')
+          .select() 
+          .order('created_at', ascending: false); 
+
+      setState(() {
+        _allRecipes = recipeMaps.map((map) => Recipe.fromMap(map)).toList();
+        _isLoading = false;
+      });
+    } on PostgrestException catch (e) {
+      setState(() {
+        _errorMessage = 'Napaka pri nalaganju receptov: ${e.message}'; 
+        _isLoading = false;
+      });
+      print('Supabase Error: ${e.message}');
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Prišlo je do nepričakovane napake: $e'; 
+        _isLoading = false;
+      });
+      print('General Error: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Example Recipe data. In a real app, this data would come from a database or API.
-    final Recipe classicPizza = Recipe(
-      name: 'Classic Margherita Pizza',
-      imageUrl: 'assets/pizza_margherita.png', // Ensure this image exists
-      description:
-          'A simple yet delicious Neapolitan pizza with fresh ingredients that highlight the natural flavors of basil, mozzarella, and tomatoes. Perfect for a quick family meal or a party.',
-      cookingTime: '15',
-      servings: '4',
-      ingredients: [
-        '200g moke (flour)',
-        '150ml vode (water)',
-        '5g kvasa (yeast)',
-        'Ščepec soli (pinch of salt)',
-        'Pelati (canned peeled tomatoes)',
-        'Mozzarella sir (mozzarella cheese)',
-        'Sveža bazilika (fresh basil)',
-        'Olivno olje (olive oil)',
-      ],
-      instructions: [
-        'Zmešajte moko, vodo, kvas in sol, da dobite testo. (Mix flour, water, yeast, and salt to get dough.)',
-        'Pustite testo vzhajati 1 uro. (Let the dough rise for 1 hour.)',
-        'Testo razvaljajte, dodajte pelate, mozzarello in baziliko. (Roll out the dough, add peeled tomatoes, mozzarella, and basil.)',
-        'Pecite v segreti pečici na 220°C 10-15 minut. (Bake in a preheated oven at 220°C for 10-15 minutes.)',
-        'Pokapajte z olivnim oljem in postrezite. (Drizzle with olive oil and serve.)',
-      ],
-    );
-
-    final Recipe strawberryIceCream = Recipe(
-      name: 'Jagodni Sladoled', // Strawberry Ice Cream
-      imageUrl: 'assets/strawberry_ice_cream.jpg', // Ensure this image exists
-      description:
-          'Osvežujoč in enostaven jagodni sladoled, kot nalašč za poletne dni. Pripravljen hitro in brez aparata za sladoled, idealen za hitro sladko pregreho.', // Refreshing and simple strawberry ice cream, perfect for summer days. Prepared quickly and without an ice cream maker, ideal for a quick sweet treat.
-      cookingTime: '15',
-      servings: '4',
-      ingredients: [
-        '500g svežih jagod (fresh strawberries)',
-        '200ml sladke smetane (heavy cream)',
-        '100g sladkorja v prahu (powdered sugar)',
-        'Sok 1/2 limone (juice of 1/2 lemon)',
-      ],
-      instructions: [
-        'Jagode operite, očistite in jih skupaj s sladkorjem ter limoninim sokom zmešajte v gladko kašo. (Wash and clean strawberries, then blend them with sugar and lemon juice into a smooth puree.)',
-        'Sladko smetano stepite do čvrstega. (Whip the heavy cream until stiff.)',
-        'Nežno vmešajte jagodno kašo v stepeno smetano. (Gently fold the strawberry puree into the whipped cream.)',
-        'Zmes prelijte v posodo, primerno za zamrzovanje, in jo zamrznite vsaj 4 ure, ali dokler ni čvrsta. (Pour the mixture into a freezer-safe container and freeze for at least 4 hours, or until firm.)',
-        'Pred serviranjem pustite sladoled nekaj minut na sobni temperaturi, da se nekoliko zmehča. (Before serving, let the ice cream sit at room temperature for a few minutes to soften slightly.)',
-      ],
-    );
-
-    final Recipe spaghettiCarbonara = Recipe(
-      name: 'Špageti Carbonara', // Spaghetti Carbonara
-      imageUrl: 'assets/spaghetti_carbonara.jpg', // Ensure this image exists
-      description:
-          'Klasična italijanska jed s kremasto omako, hrustljavo panceto in svežim parmezanom. Hitro in enostavno za pripravo, popolna za hitro kosilo ali večerjo.', // Classic Italian dish with creamy sauce, crispy pancetta, and fresh Parmesan. Quick and easy to prepare, perfect for a fast lunch or dinner.
-      cookingTime: '20',
-      servings: '2',
-      ingredients: [
-        '200g špagetov (spaghetti)',
-        '100g pancete ali guancialeja (pancetta or guanciale)',
-        '2 jajci (samo rumenjaka) (2 eggs (only yolks))',
-        '50g naribanega parmezana (ali pecorino romana) (grated Parmesan (or Pecorino Romano))',
-        'Sveže mlet črni poper (freshly ground black pepper)',
-        'Sol (salt)',
-      ],
-      instructions: [
-        'Špagete skuhajte v osoljeni vodi po navodilih na embalaži. (Cook spaghetti in salted water according to package instructions.)',
-        'Medtem ko se špageti kuhajo, narežite panceto na majhne kocke in jo popečite v ponvi do hrustljavega. Odstranite iz ponve in prihranite maščobo. (While spaghetti cooks, dice pancetta into small cubes and fry in a pan until crispy. Remove from pan and reserve the fat.)',
-        'V skledi zmešajte rumenjake s parmezanom in veliko sveže mletega popra. (In a bowl, mix egg yolks with Parmesan and plenty of freshly ground black pepper.)',
-        'Ko so špageti kuhani, jih odcedite, vendar prihranite približno 50 ml vode od kuhanja. (When spaghetti is cooked, drain it, but reserve about 50 ml of the cooking water.)',
-        'Špagete dodajte v ponev z maščobo od pancete. Odstavite z ognja in hitro vmešajte jajčno zmes. Dodajte malo prihranjene vode od kuhanja, da dobite kremasto omako. (Add spaghetti to the pan with pancetta fat. Remove from heat and quickly stir in the egg mixture. Add a little reserved cooking water to create a creamy sauce.)',
-        'Dodajte popečeno panceto in dobro premešajte. Po potrebi dodajte še malo parmezana in popra. (Add the crispy pancetta and mix well. Add more Parmesan and pepper if needed.)',
-        'Takoj postrezite. (Serve immediately.)',
-      ],
-    );
-
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Large Recipe Card
-            Card(
-              elevation: 4.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: InkWell(
-                // Use InkWell for tap effect
-                borderRadius: BorderRadius.circular(15),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              RecipeDetailsScreen(recipe: classicPizza),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text(
+                      _errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.tomatoRed, fontSize: 16),
                     ),
-                  );
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Image for the large card
-                      Image.asset(
-                        classicPizza.imageUrl,
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.cover,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              classicPizza.name,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.charcoal,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 18,
-                                  color: AppColors.dimGray,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${classicPizza.cookingTime} min',
-                                  style: TextStyle(
-                                    color: AppColors.dimGray,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Icon(
-                                  Icons.people,
-                                  size: 18,
-                                  color: AppColors.dimGray,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${classicPizza.servings} servings',
-                                  style: TextStyle(
-                                    color: AppColors.dimGray,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              classicPizza.description,
-                              style: TextStyle(
-                                color: AppColors.dimGray,
-                                fontSize: 14,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Smaller Recipe Cards
-            _buildSmallRecipeCard(
-              context,
-              strawberryIceCream, // Pass the Recipe object
-            ),
-            const SizedBox(height: 15),
-            _buildSmallRecipeCard(
-              context,
-              spaghettiCarbonara, // Pass the Recipe object
-            ),
-            // Add more as needed
-            const SizedBox(height: 50), // Space for FAB if you add one later
-          ],
-        ),
-      ),
+                )
+              : _allRecipes.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Trenutno ni na voljo nobenih receptov.', 
+                        style: TextStyle(fontSize: 18, color: AppColors.dimGray),
+                      ),
+                    )
+                  : RefreshIndicator( 
+                      onRefresh: _fetchAllRecipes,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16.0),
+                        itemCount: _allRecipes.length,
+                        itemBuilder: (context, index) {
+                          final recipe = _allRecipes[index];
+                          return _buildSmallRecipeCard(context, recipe);
+                        },
+                      ),
+                    ),
     );
   }
 
-  // Helper method to build consistent small recipe cards
   Widget _buildSmallRecipeCard(
-    BuildContext context,
-    Recipe recipe, // Now accepts a Recipe object
-  ) {
+      BuildContext context,
+      Recipe recipe,
+      ) {
     return Card(
       elevation: 2.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.only(bottom: 15), 
       child: InkWell(
         onTap: () {
-          // Navigate to Recipe Detail Screen, passing the recipe object
+          
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -222,16 +110,29 @@ class HomeContentScreen extends StatelessWidget {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(10), // Match card border radius
+        borderRadius: BorderRadius.circular(10),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
-              // Image for small card
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  recipe.imageUrl, // Use the image URL from the recipe object
+                child: recipe.imageUrl.startsWith('http')
+                    ? Image.network( 
+                  recipe.imageUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      Container( 
+                        width: 80,
+                        height: 80,
+                        color: AppColors.paleGray,
+                        child: Icon(Icons.broken_image, color: AppColors.dimGray),
+                      ),
+                )
+                    : Image.asset( 
+                  recipe.imageUrl,
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
