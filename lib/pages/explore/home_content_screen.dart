@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
-import 'package:dish_dash/pages/recipes/recipe_details_screen.dart'; 
-
+import 'package:dish_dash/pages/recipes/recipe_details_screen.dart';
 
 class HomeContentScreen extends StatefulWidget {
   const HomeContentScreen({super.key});
@@ -14,41 +13,45 @@ class HomeContentScreen extends StatefulWidget {
 
 class _HomeContentScreenState extends State<HomeContentScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
-  List<Recipe> _allRecipes = []; 
+  List<Recipe> _recommendedRecipes = [];
   bool _isLoading = true;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchAllRecipes();
+    _fetchRecommendedRecipes();
   }
 
-  Future<void> _fetchAllRecipes() async {
+  Future<void> _fetchRecommendedRecipes() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      final List<Map<String, dynamic>> recipeMaps = await supabase
-          .from('recipes')
-          .select() 
-          .order('created_at', ascending: false); 
+      final List<dynamic> data = await supabase.rpc(
+        'get_recommended_recipes_random',
+        params: {'num_recipes': 15},
+      );
+
+      final List<Map<String, dynamic>> recipeMaps =
+          List<Map<String, dynamic>>.from(data);
 
       setState(() {
-        _allRecipes = recipeMaps.map((map) => Recipe.fromMap(map)).toList();
+        _recommendedRecipes =
+            recipeMaps.map((map) => Recipe.fromMap(map)).toList();
         _isLoading = false;
       });
     } on PostgrestException catch (e) {
       setState(() {
-        _errorMessage = 'Napaka pri nalaganju receptov: ${e.message}'; 
+        _errorMessage = 'Napaka pri nalaganju priporočenih receptov: ${e.message}';
         _isLoading = false;
       });
       print('Supabase Error: ${e.message}');
     } catch (e) {
       setState(() {
-        _errorMessage = 'Prišlo je do nepričakovane napake: $e'; 
+        _errorMessage = 'Prišlo je do nepričakovanih napake pri nalaganju priporočenih receptov: $e';
         _isLoading = false;
       });
       print('General Error: $e');
@@ -71,20 +74,20 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                     ),
                   ),
                 )
-              : _allRecipes.isEmpty
+              : _recommendedRecipes.isEmpty
                   ? Center(
                       child: Text(
-                        'Trenutno ni na voljo nobenih receptov.', 
+                        'Trenutno ni na voljo nobenih priporočenih receptov.',
                         style: TextStyle(fontSize: 18, color: AppColors.dimGray),
                       ),
                     )
-                  : RefreshIndicator( 
-                      onRefresh: _fetchAllRecipes,
+                  : RefreshIndicator(
+                      onRefresh: _fetchRecommendedRecipes,
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16.0),
-                        itemCount: _allRecipes.length,
+                        itemCount: _recommendedRecipes.length,
                         itemBuilder: (context, index) {
-                          final recipe = _allRecipes[index];
+                          final recipe = _recommendedRecipes[index];
                           return _buildSmallRecipeCard(context, recipe);
                         },
                       ),
@@ -93,16 +96,15 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   }
 
   Widget _buildSmallRecipeCard(
-      BuildContext context,
-      Recipe recipe,
-      ) {
+    BuildContext context,
+    Recipe recipe,
+  ) {
     return Card(
       elevation: 2.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: const EdgeInsets.only(bottom: 15), 
+      margin: const EdgeInsets.only(bottom: 15),
       child: InkWell(
         onTap: () {
-          
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -118,25 +120,26 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: recipe.imageUrl.startsWith('http')
-                    ? Image.network( 
-                  recipe.imageUrl,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container( 
+                    ? Image.network(
+                        recipe.imageUrl,
                         width: 80,
                         height: 80,
-                        color: AppColors.paleGray,
-                        child: Icon(Icons.broken_image, color: AppColors.dimGray),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(
+                          width: 80,
+                          height: 80,
+                          color: AppColors.paleGray,
+                          child: Icon(Icons.broken_image,
+                              color: AppColors.dimGray),
+                        ),
+                      )
+                    : Image.asset(
+                        recipe.imageUrl,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
                       ),
-                )
-                    : Image.asset( 
-                  recipe.imageUrl,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                ),
               ),
               const SizedBox(width: 15),
               Expanded(
