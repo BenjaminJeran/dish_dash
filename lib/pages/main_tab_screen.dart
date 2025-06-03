@@ -2,6 +2,7 @@
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
+import 'package:dish_dash/pages/settings/about_screen.dart';
 import 'package:dish_dash/pages/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart'; 
@@ -99,9 +100,15 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              onTap:
+                  () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutScreen(),
+                      ),
+                    ),
+                  },
             ),
             ListTile(
               leading: const Icon(Icons.shopping_bag),
