@@ -155,4 +155,24 @@ class ChallengeService {
       rethrow;
     }
   }
+
+   Future<void> leaveChallenge(String userChallengeId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated.');
+    }
+
+    try {
+      await _supabase
+          .from('user_challenges')
+          .delete()
+          .eq('id', userChallengeId)
+          .eq('user_id', userId); // Ensure only current user can delete their challenges
+    } catch (e) {
+      print('Error leaving challenge: $e');
+      rethrow;
+    }
+  }
 }
+
+
