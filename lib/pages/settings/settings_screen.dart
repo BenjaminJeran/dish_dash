@@ -1,7 +1,10 @@
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Ensure this path is correct
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dish_dash/pages/settings/privacy_screen.dart';
+import 'package:dish_dash/pages/settings/push_notifications_screen.dart';
+import 'package:dish_dash/pages/settings/about_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -21,9 +24,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Navigator.pop(context);
           },
         ),
-        title: Center(
-          child: Image.asset('assets/logo.png', height: 80), // Your app logo
+        title: SizedBox(
+          height: 80,
+          child: Center(
+            child: Image.asset('assets/logo.png', height: 80),
+          ), // Your app logo
         ),
+        centerTitle: true,
         actions: const [
           SizedBox(width: 50), // To balance the back button and center the logo
         ],
@@ -41,8 +48,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.vpn_key_outlined,
               text: 'Privacy',
               onTap: () {
-                print('Privacy tapped');
-                // TODO: Navigate to Privacy settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PrivacyScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 10),
@@ -51,8 +62,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.notifications_none,
               text: 'Push Notifications',
               onTap: () {
-                print('Push Notifications tapped');
-                // TODO: Navigate to Push Notifications settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PushNotificationsScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 10),
@@ -61,8 +76,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.favorite_border,
               text: 'About',
               onTap: () {
-                print('About tapped');
-                // TODO: Navigate to About page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutScreen()),
+                );
               },
             ),
             const SizedBox(height: 10),
@@ -73,7 +90,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () async {
                 try {
                   await Supabase.instance.client.auth.signOut();
-                  // The 'mounted' check is now valid because _SettingsScreenState is a State object.
                   if (mounted) {
                     Navigator.pushReplacement(
                       context,

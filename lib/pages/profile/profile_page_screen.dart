@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/services/user_service.dart';
-import 'package:dish_dash/pages/settings_screen.dart';
+import 'package:dish_dash/pages/settings/settings_screen.dart';
 import 'widgets/profile_avatar.dart';
 import 'widgets/editable_text_field.dart';
 import 'widgets/about_me_card.dart';
