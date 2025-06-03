@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
-import 'package:dish_dash/models/recipe.dart'; 
-import 'package:dish_dash/pages/profile_page_screen.dart'; 
+import 'package:dish_dash/models/recipe.dart';
+import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 
 class RecipeDetailsScreen extends StatelessWidget {
   final Recipe recipe;
@@ -45,35 +45,42 @@ class RecipeDetailsScreen extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: recipe.imageUrl.startsWith('http')
-                      ? Image.network( 
-                          recipe.imageUrl,
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container( 
-                                width: double.infinity,
-                                height: 250,
-                                color: AppColors.paleGray,
-                                child: Icon(Icons.broken_image,
-                                    color: AppColors.dimGray, size: 50),
-                              ),
-                        )
-                      : Image.asset(
-                          recipe.imageUrl,
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container( 
-                                width: double.infinity,
-                                height: 250,
-                                color: AppColors.paleGray,
-                                child: Icon(Icons.image_not_supported,
-                                    color: AppColors.dimGray, size: 50),
-                              ),
-                        ),
+                  child:
+                      recipe.imageUrl.startsWith('http')
+                          ? Image.network(
+                            recipe.imageUrl,
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) => Container(
+                                  width: double.infinity,
+                                  height: 250,
+                                  color: AppColors.paleGray,
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: AppColors.dimGray,
+                                    size: 50,
+                                  ),
+                                ),
+                          )
+                          : Image.asset(
+                            recipe.imageUrl,
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) => Container(
+                                  width: double.infinity,
+                                  height: 250,
+                                  color: AppColors.paleGray,
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: AppColors.dimGray,
+                                    size: 50,
+                                  ),
+                                ),
+                          ),
                 ),
                 Positioned(
                   top: 10,
@@ -137,16 +144,20 @@ class RecipeDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                 
-                  if (recipe.category.isNotEmpty) 
+
+                  if (recipe.category.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Row(
                         children: [
-                          Icon(Icons.category, size: 20, color: AppColors.dimGray),
+                          Icon(
+                            Icons.category,
+                            size: 20,
+                            color: AppColors.dimGray,
+                          ),
                           const SizedBox(width: 4),
                           Text(
-                            'Kategorija: ${recipe.category}', 
+                            'Kategorija: ${recipe.category}',
                             style: TextStyle(
                               color: AppColors.dimGray,
                               fontSize: 16,
@@ -157,7 +168,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                     ),
                   const SizedBox(height: 15),
                   Text(
-                    recipe.description, 
+                    recipe.description,
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.charcoal,
@@ -166,14 +177,14 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  
                   _buildStepCard(
                     context,
                     stepNumber: 1,
                     title: 'Sestavine',
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: recipe.ingredients
+                      children:
+                          recipe.ingredients
                               .map(
                                 (ingredient) => Padding(
                                   padding: const EdgeInsets.only(bottom: 4.0),
@@ -191,27 +202,27 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                
                   _buildStepCard(
                     context,
                     stepNumber: 2,
-                    title: 'Navodila za pripravo', 
+                    title: 'Navodila za pripravo',
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: recipe.instructions.asMap().entries.map((entry) {
-                        int idx = entry.key;
-                        String instruction = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Text(
-                            '${idx + 1}. $instruction',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.charcoal,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      children:
+                          recipe.instructions.asMap().entries.map((entry) {
+                            int idx = entry.key;
+                            String instruction = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                '${idx + 1}. $instruction',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.charcoal,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -263,7 +274,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Ni sestavin za dodati v nakupovalni seznam.', 
+                                'Ni sestavin za dodati v nakupovalni seznam.',
                               ),
                               duration: Duration(seconds: 2),
                             ),
@@ -337,7 +348,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                content, 
+                content,
               ],
             ),
           ),

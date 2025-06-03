@@ -1,6 +1,6 @@
 // lib/pages/main_tab_screen.dart
 import 'package:dish_dash/pages/auth/login_screen.dart';
-import 'package:dish_dash/pages/profile_page_screen.dart';
+import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
 import 'package:dish_dash/pages/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +51,11 @@ class _MainTabScreenState extends State<MainTabScreen> {
                 },
               ),
         ),
-        title: Center(child: Image.asset('assets/logo.png', height: 80)),
+        title: SizedBox(
+          height: 80,
+          child: Center(child: Image.asset('assets/logo.png', height: 80)),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
