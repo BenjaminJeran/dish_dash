@@ -41,26 +41,36 @@ class _EditableTextFieldState extends State<EditableTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _isEditing
-            ? SizedBox(
-              width: 200,
-              child: TextField(
-                controller: _controller,
-                autofocus: true,
-                style: widget.style,
-                textAlign: TextAlign.center,
-              ),
-            )
-            : Text(widget.value, style: widget.style),
-        const SizedBox(width: 8),
-        IconButton(
-          icon: Icon(_isEditing ? Icons.check : Icons.edit),
-          onPressed: _toggleEdit,
+    return Center(
+      child: IntrinsicWidth(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _isEditing
+                ? Flexible(
+                    child: TextField(
+                      controller: _controller,
+                      autofocus: true,
+                      style: widget.style,
+                      textAlign: TextAlign.center,
+                      textAlignVertical: TextAlignVertical.center,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  )
+                : Text(widget.value, style: widget.style),
+            const SizedBox(width: 6),
+            IconButton(
+              icon: Icon(_isEditing ? Icons.check : Icons.edit),
+              onPressed: _toggleEdit,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

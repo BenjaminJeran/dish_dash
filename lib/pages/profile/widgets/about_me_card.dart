@@ -64,7 +64,7 @@ class _AboutMeCardState extends State<AboutMeCard> {
                   maxLines: null,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
-                    hintText: 'Unesi nešto o sebi...',
+                    hintText: 'Vnesi nekaj o sebi...',
                   ),
                 )
                 : Text(widget.text, style: const TextStyle(fontSize: 14)),

@@ -2,19 +2,15 @@
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
+import 'package:dish_dash/pages/settings/about_screen.dart';
 import 'package:dish_dash/pages/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:dish_dash/colors/app_colors.dart'; // Import your custom colors
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
-
-// Import the content screens for each tab
+import 'package:dish_dash/colors/app_colors.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 import 'package:dish_dash/pages/explore/home_content_screen.dart';
 import 'package:dish_dash/pages/explore/explore_content_screen.dart';
 import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
-import 'package:dish_dash/pages/recipes/create_recipe_screen.dart'; // For the FAB
-
-// You can now remove this import as it's no longer used in this file
-// import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dish_dash/pages/recipes/create_recipe_screen.dart'; 
 
 class MainTabScreen extends StatefulWidget {
   const MainTabScreen({super.key});
@@ -100,9 +96,15 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              onTap:
+                  () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutScreen(),
+                      ),
+                    ),
+                  },
             ),
             ListTile(
               leading: const Icon(Icons.shopping_bag),
