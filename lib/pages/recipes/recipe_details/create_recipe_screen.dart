@@ -84,7 +84,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   _getImage(ImageSource.camera);
                 },
               ),
-              // Option to remove selected image
+
               if (_selectedImage != null)
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
@@ -118,7 +118,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     }
   }
 
-  // --- Supabase Image Upload ---
   Future<String?> _uploadImageToSupabaseStorage(XFile imageFile) async {
     try {
       final String fileName =
@@ -163,7 +162,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     }
   }
 
-  // --- Dynamic Field Management for Ingredients and Instructions ---
   void _addIngredientField() {
     setState(() {
       _ingredientControllers.add(TextEditingController());
@@ -198,7 +196,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     });
   }
 
-  // --- Add Recipe Logic ---
   Future<void> _addRecipe() async {
     setState(() {
       _isLoading = true;
@@ -222,7 +219,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     final category = _selectedCategory;
     final userId = supabase.auth.currentUser?.id;
 
-    // --- VALIDATION ---
     if (recipeName.isEmpty ||
         description.isEmpty ||
         ingredientsList.isEmpty ||
@@ -262,12 +258,10 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
     String? imageUrl;
 
-    // --- CONDITIONAL IMAGE UPLOAD & PREPARATION OF DATA MAP ---
     if (_selectedImage != null) {
       try {
         imageUrl = await _uploadImageToSupabaseStorage(_selectedImage!);
         if (imageUrl == null) {
-          // If image upload failed, stop the process
           setState(() {
             _isLoading = false;
           });
@@ -289,7 +283,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       }
     }
 
-    // Prepare the data map for insertion
     final Map<String, dynamic> recipeData = {
       'name': recipeName,
       'description': description,
@@ -302,14 +295,10 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       'created_at': DateTime.now().toIso8601String(),
     };
 
-    // ONLY ADD 'image_url' to the map if an image was selected and uploaded successfully
     if (imageUrl != null) {
       recipeData['image_url'] = imageUrl;
     }
-    // If imageUrl is null, 'image_url' key is completely omitted from the map,
-    // which will trigger Supabase to use the column's DEFAULT value.
 
-    // Save recipe to Supabase Database
     try {
       await supabase.from('recipes').insert(recipeData);
 
@@ -332,7 +321,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         );
       }
 
-      // Clear all fields after successful submission
+     
       _recipeNameController.clear();
       _descriptionController.clear();
       _cookingTimeController.clear();
@@ -352,7 +341,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
       setState(() {
         _selectedCategory = null;
-        _selectedImage = null; // Clear selected image
+        _selectedImage = null; 
       });
     } on PostgrestException catch (e) {
       print('Supabase Database Error: ${e.message}');
@@ -383,7 +372,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     }
   }
 
-  // --- Reusable Input Field Widget ---
   Widget _buildInputField({
     required TextEditingController controller,
     required String hintText,
@@ -433,7 +421,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             icon: const Icon(Icons.person),
             onPressed: () {
               print('Profile icon pressed');
-              // Navigate to profile screen or show user info
             },
           ),
         ],
@@ -472,7 +459,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // --- Dynamic Ingredients Input ---
             Text(
               'Sestavine',
               style: TextStyle(
@@ -497,7 +483,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                           keyboardType: TextInputType.text,
                         ),
                       ),
-                      if (_ingredientControllers.length > 1 || controller.text.isNotEmpty) // Show remove button if more than one field or if the current field has text
+                      if (_ingredientControllers.length > 1 || controller.text.isNotEmpty) 
                         IconButton(
                           icon: Icon(Icons.remove_circle_outline,
                               color: AppColors.tomatoRed),
@@ -519,7 +505,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // --- Dynamic Instructions Input ---
             Text(
               'Navodila za pripravo',
               style: TextStyle(
@@ -546,7 +531,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                           minLines: 1,
                         ),
                       ),
-                      if (_instructionControllers.length > 1 || controller.text.isNotEmpty) // Same logic for showing remove button
+                      if (_instructionControllers.length > 1 || controller.text.isNotEmpty)
                         IconButton(
                           icon: Icon(Icons.remove_circle_outline,
                               color: AppColors.tomatoRed),
@@ -568,7 +553,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // --- Cooking Time & Servings ---
             Row(
               children: [
                 Expanded(
@@ -592,7 +576,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // --- Category Dropdown & Image Upload Button ---
             Row(
               children: [
                 Expanded(
@@ -669,7 +652,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 ),
               ],
             ),
-            // Display selected image if it exists
+            
             if (_selectedImage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10.0),
@@ -687,7 +670,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               ),
             const SizedBox(height: 30),
 
-            // --- Add Recipe Button ---
             ElevatedButton(
               onPressed: _isLoading ? null : _addRecipe,
               style: ElevatedButton.styleFrom(
