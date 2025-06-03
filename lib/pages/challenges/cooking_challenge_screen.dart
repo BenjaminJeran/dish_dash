@@ -5,10 +5,8 @@ import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/user_challenge.dart';
 import 'package:dish_dash/services/challenge_service.dart';
 import 'package:dish_dash/pages/challenges/browse_challenges_screen.dart';
-import 'package:dish_dash/helpers/toast_manager.dart'; // <--- ADD THIS IMPORT
+import 'package:dish_dash/helpers/toast_manager.dart';
 
-// This widget can be put in a separate 'widgets' folder if preferred for reusability
-// For now, it's defined here.
 class OverallCookingProgressBar extends StatelessWidget {
   final double progress;
   final String title;
@@ -84,40 +82,64 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
         _userChallengesFuture = _challengeService.fetchUserChallenges(userId);
       });
     } else {
-      // Handle not logged in state, perhaps redirect to login or show an empty state
       setState(() {
-        _userChallengesFuture = Future.value([]); // Return an empty list
+        _userChallengesFuture = Future.value([]);
       });
-      // Using ToastManager for user-facing message
       if (mounted) {
         ToastManager.showInfoToast(context, 'Please log in to view challenges.');
       }
     }
   }
 
+  String _formatErrorMessage(dynamic error) {
+    String errorMessage = error.toString();
+    if (errorMessage.startsWith('Exception: ')) {
+      return errorMessage.substring('Exception: '.length);
+    }
+    return errorMessage;
+  }
+
   Future<void> _markDayComplete(UserChallenge userChallenge) async {
     try {
       await _challengeService.markDayComplete(userChallenge);
       if (mounted) {
-        // Replaced ScaffoldMessenger with ToastManager for success notification
         ToastManager.showSuccessToast(
           context,
           'Day ${userChallenge.currentDay + 1} of "${userChallenge.challenge?.title}" marked complete!',
         );
-        _fetchUserChallenges(); // Refresh the list after update
+        _fetchUserChallenges();
       }
     } catch (e) {
       if (mounted) {
-        // Replaced ScaffoldMessenger with ToastManager for error notification
         ToastManager.showErrorToast(
           context,
-          'Failed to mark day complete: ${e.toString()}',
+          'Failed to mark day complete: ${_formatErrorMessage(e)}',
         );
       }
     }
   }
 
-  // Helper to calculate overall progress from all user challenges
+  Future<void> _leaveChallenge(UserChallenge userChallenge) async {
+    try {
+      await _challengeService.leaveChallenge(userChallenge.id);
+      if (mounted) {
+        ToastManager.showSuccessToast(
+          context,
+          'Successfully left "${userChallenge.challenge?.title ?? 'the challenge'}"!',
+        );
+        _fetchUserChallenges();
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastManager.showErrorToast(
+          context,
+          'Failed to leave challenge: ${_formatErrorMessage(e)}',
+        );
+        _fetchUserChallenges();
+      }
+    }
+  }
+
   double _calculateOverallProgress(List<UserChallenge> challenges) {
     if (challenges.isEmpty) return 0.0;
 
@@ -125,7 +147,6 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
     int totalCompletedDays = 0;
 
     for (var uc in challenges) {
-      // Consider all challenges (active and completed) for the overall bar
       if (uc.challenge != null) {
         totalPossibleDays += uc.durationDays;
         totalCompletedDays += uc.currentDay;
@@ -136,19 +157,14 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
     return totalCompletedDays / totalPossibleDays;
   }
 
-  // Method to navigate to the browse challenges screen
   void _navigateToBrowseChallenges() async {
-    // Navigator.push returns a Future that completes when the pushed route is popped.
-    // We can use its result to check if a challenge was joined and then refresh.
     final bool? challengeJoined = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const BrowseChallengesScreen()),
     );
 
-    // If challengeJoined is true, it means a challenge was successfully joined
-    // on the BrowseChallengesScreen, so we should refresh the current screen.
     if (challengeJoined == true) {
-      _fetchUserChallenges(); // Refresh challenges if a new one was joined
+      _fetchUserChallenges(); 
     }
   }
 
@@ -156,19 +172,13 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kuharski izziv'), // App bar title for this screen
+        title: const Text('Kuharski izziv'),
         centerTitle: true,
-        backgroundColor: Colors.transparent, // Match your app bar style
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: AppColors.charcoal, // Match your app bar style
-        actions: [
-          // Add a button to browse challenges even if some are active
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Browse New Challenges', // Accessibility text
-            onPressed: _navigateToBrowseChallenges,
-          ),
-        ],
+        foregroundColor: AppColors.charcoal,
+        // Removed the IconButton from actions
+        actions: const [], // Empty actions list
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -178,13 +188,12 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              // Using ToastManager for error notification
               if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData || snapshot.data!.isEmpty) {
-                 ToastManager.showErrorToast(context, 'Failed to load challenges: ${snapshot.error}');
+                 ToastManager.showErrorToast(context, 'Failed to load challenges: ${_formatErrorMessage(snapshot.error)}');
               }
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(child: Text('Error: ${_formatErrorMessage(snapshot.error)}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              // Display when no active challenges are found for the user
+              // This block is already good for when there are NO challenges
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -196,7 +205,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
-                      onPressed: _navigateToBrowseChallenges, // Navigate to browse screen
+                      onPressed: _navigateToBrowseChallenges,
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Find New Challenges'),
                       style: ElevatedButton.styleFrom(
@@ -210,14 +219,13 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                 ),
               );
             } else {
-              // Display active challenges and overall progress
               final List<UserChallenge> userChallenges = snapshot.data!;
               final double overallProgress = _calculateOverallProgress(userChallenges);
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  OverallCookingProgressBar(progress: overallProgress), // Overall progress bar at the top
+                  OverallCookingProgressBar(progress: overallProgress),
                   Expanded(
                     child: ListView.builder(
                       itemCount: userChallenges.length,
@@ -227,100 +235,165 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                             userChallenge.challenge?.title ?? 'Unknown Challenge';
                         final totalDays = userChallenge.durationDays;
                         final currentDay = userChallenge.currentDay;
-                        // Calculate individual challenge progress, clamping to avoid >100%
                         final progress = totalDays > 0 ? (currentDay / totalDays).clamp(0.0, 1.0) : 0.0;
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8.0),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        return Dismissible(
+                          key: ValueKey(userChallenge.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            color: Colors.red,
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            challengeTitle,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.charcoal,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            userChallenge.isCompleted
-                                                ? 'Completed!'
-                                                : 'Day $currentDay of $totalDays',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: userChallenge.isCompleted ? AppColors.leafGreen : AppColors.dimGray,
-                                              fontWeight: userChallenge.isCompleted ? FontWeight.bold : FontWeight.normal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                Icon(Icons.exit_to_app, color: Colors.white, size: 30),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Leave',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          confirmDismiss: (direction) async {
+                            return await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Confirm Leave'),
+                                  content: Text(
+                                      'Are you sure you want to leave "${challengeTitle}"? This cannot be undone.'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
                                     ),
-                                    const SizedBox(width: 10),
-                                    // Circular progress indicator for individual challenge
-                                    SizedBox(
-                                      width: 40,
-                                      height: 40,
-                                      child: CircularProgressIndicator(
-                                        value: progress,
-                                        backgroundColor: AppColors.paleGray,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          userChallenge.isCompleted ? AppColors.leafGreen : AppColors.leafGreen,
-                                        ),
-                                        strokeWidth: 5,
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.of(context).pop(true),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
                                       ),
+                                      child: const Text('Leave'),
                                     ),
                                   ],
-                                ),
-                                const SizedBox(height: 12),
-                                // Mark Day Complete Button (only visible if not completed)
-                                if (!userChallenge.isCompleted && userChallenge.currentDay < totalDays)
-                                  Align(
-                                    alignment: Alignment.bottomRight,
-                                    child: ElevatedButton(
-                                      onPressed: () => _markDayComplete(userChallenge),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.leafGreen,
-                                        foregroundColor: AppColors.white,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8)),
+                                );
+                              },
+                            );
+                          },
+                          onDismissed: (direction) {
+                            _leaveChallenge(userChallenge);
+                          },
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              challengeTitle,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.charcoal,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              userChallenge.isCompleted
+                                                  ? 'Completed!'
+                                                  : 'Day $currentDay of $totalDays',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: userChallenge.isCompleted ? AppColors.leafGreen : AppColors.dimGray,
+                                                fontWeight: userChallenge.isCompleted ? FontWeight.bold : FontWeight.normal,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      child: const Text('Mark Day Complete'),
-                                    ),
-                                  )
-                                else if (userChallenge.isCompleted)
-                                  // Message when challenge is completed
-                                  const Align(
-                                    alignment: Alignment.bottomRight,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(top: 8.0),
-                                      child: Text(
-                                        'Challenge Completed!',
-                                        style: TextStyle(
-                                          color: AppColors.leafGreen,
-                                          fontWeight: FontWeight.bold,
+                                      const SizedBox(width: 10),
+                                      SizedBox(
+                                        width: 40,
+                                        height: 40,
+                                        child: CircularProgressIndicator(
+                                          value: progress,
+                                          backgroundColor: AppColors.paleGray,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            userChallenge.isCompleted ? AppColors.leafGreen : AppColors.leafGreen,
+                                          ),
+                                          strokeWidth: 5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  if (!userChallenge.isCompleted && userChallenge.currentDay < totalDays)
+                                    Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: ElevatedButton(
+                                        onPressed: () => _markDayComplete(userChallenge),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.leafGreen,
+                                          foregroundColor: AppColors.white,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                        ),
+                                        child: const Text('Mark Day Complete'),
+                                      ),
+                                    )
+                                  else if (userChallenge.isCompleted)
+                                    const Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(top: 8.0),
+                                        child: Text(
+                                          'Challenge Completed!',
+                                          style: TextStyle(
+                                            color: AppColors.leafGreen,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );
                       },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: Center(
+                      child: ElevatedButton.icon(
+                        onPressed: _navigateToBrowseChallenges,
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('Find More Challenges'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.leafGreen,
+                          foregroundColor: AppColors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
                   ),
                 ],
