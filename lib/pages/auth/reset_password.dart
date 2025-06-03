@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ResetPasswordScreen extends StatelessWidget {
   const ResetPasswordScreen({super.key});
@@ -54,20 +55,32 @@ class ResetPasswordScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (formKey.currentState!.validate()) {
-                      // Logic to send reset email
-                      print(
-                        'Password reset link sent to ${emailController.text}',
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Povezava za ponastavitev gesla je bila poslana.',
+                      final email = emailController.text.trim();
+                      final supabase = Supabase.instance.client;
+
+                      try {
+                        await supabase.auth.resetPasswordForEmail(
+                          email,
+                          redirectTo: 'myapp://reset-password',
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Povezava za ponastavitev gesla je bila poslana.',
+                            ),
                           ),
-                        ),
-                      );
-                      Navigator.pop(context); // Go back to login
+                        );
+                        Navigator.pop(context); // Go back to login
+                      } catch (error) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Napaka: $error'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
                   },
                   child: const Text('Pošlji'), // "Send"
