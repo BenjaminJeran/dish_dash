@@ -1,5 +1,5 @@
 // lib/pages/shopping_list_screen.dart
-import 'package:dish_dash/pages/profile_page_screen.dart';
+import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 import 'package:dish_dash/colors/app_colors.dart';
