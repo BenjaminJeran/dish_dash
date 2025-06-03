@@ -12,7 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/pages/explore/home_content_screen.dart';
 import 'package:dish_dash/pages/explore/explore_content_screen.dart';
 import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
-import 'package:dish_dash/pages/recipes/recipe_details/create_recipe_screen.dart'; // For the FAB
+import 'package:dish_dash/pages/recipes/create_recipe_screen.dart'; 
 
 
 
