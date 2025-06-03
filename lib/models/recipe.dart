@@ -1,4 +1,5 @@
 class Recipe {
+  final String id;
   final String name;
   final String imageUrl;
   final String description;
@@ -9,6 +10,7 @@ class Recipe {
   final List<String> instructions;
 
   Recipe({
+    required this.id,
     required this.name,
     required this.imageUrl,
     required this.description,
@@ -21,6 +23,7 @@ class Recipe {
 
   factory Recipe.fromMap(Map<String, dynamic> map) {
     return Recipe(
+      id: map['id'] as String,
       name: map['name'] as String? ?? 'Neznano ime',
       imageUrl: map['image_url'] as String? ?? '',
       description: map['description'] as String? ?? 'Ni opisa.',

@@ -2,11 +2,170 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class RecipeDetailsScreen extends StatelessWidget {
+class RecipeDetailsScreen extends StatefulWidget {
   final Recipe recipe;
 
   const RecipeDetailsScreen({super.key, required this.recipe});
+
+  @override
+  State<RecipeDetailsScreen> createState() => _RecipeDetailsScreenState();
+}
+
+class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
+  final SupabaseClient supabase = Supabase.instance.client;
+  int _likesCount = 0;
+  bool _isLikedByUser = false;
+  String? _currentUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUserId = supabase.auth.currentUser?.id;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchLikeStatusAndCount();
+  }
+
+
+  Future<void> _fetchLikeStatusAndCount() async {
+    if (_currentUserId == null) {
+      print('User is not logged in. Cannot fetch personal like status.');
+      try {
+        final PostgrestResponse countResponse = await supabase
+            .from('likes')
+            .select()
+            .eq('recipe_id', widget.recipe.id)
+            .count(CountOption.exact);
+
+        if (mounted) {
+          setState(() {
+            _likesCount = countResponse.count ?? 0;
+          });
+        }
+      } on PostgrestException catch (e) {
+        print('Error fetching public likes count: ${e.message}');
+        if (mounted) { 
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error fetching public likes data: ${e.message}')),
+          );
+        }
+      } catch (e) {
+        print('An unexpected error occurred fetching public likes: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('An unexpected error occurred fetching public likes.')),
+          );
+        }
+      }
+      return;
+    }
+
+    try {
+      final PostgrestResponse countResponse = await supabase
+          .from('likes')
+          .select()
+          .eq('recipe_id', widget.recipe.id)
+          .count(CountOption.exact);
+
+      final totalLikes = countResponse.count;
+
+      final List<Map<String, dynamic>> userLikeData = await supabase
+          .from('likes')
+          .select('id')
+          .eq('recipe_id', widget.recipe.id)
+          .eq('user_id', _currentUserId!)
+          .limit(1);
+
+      final isLiked = userLikeData.isNotEmpty;
+
+      if (mounted) {
+        setState(() {
+          _likesCount = totalLikes ?? 0;
+          _isLikedByUser = isLiked;
+        });
+      }
+    } on PostgrestException catch (e) {
+      print('Supabase Error fetching like data: ${e.message}');
+      if (mounted) { // Context is safe to use here
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching like data: ${e.message}')),
+        );
+      }
+    } catch (e) {
+      print('An unexpected error occurred: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An unexpected error occurred.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    if (_currentUserId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to like recipes.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      if (_isLikedByUser) {
+        await supabase
+            .from('likes')
+            .delete()
+            .eq('user_id', _currentUserId!)
+            .eq('recipe_id', widget.recipe.id);
+
+        if (mounted) {
+          setState(() {
+            _isLikedByUser = false;
+            _likesCount--;
+          });
+        }
+        print('Recipe unliked!');
+      } else {
+        await supabase.from('likes').insert({
+          'user_id': _currentUserId!,
+          'recipe_id': widget.recipe.id,
+        });
+
+        if (mounted) {
+          setState(() {
+            _isLikedByUser = true;
+            _likesCount++;
+          });
+        }
+        print('Recipe liked!');
+      }
+    } on PostgrestException catch (e) {
+      if (e.message.contains('duplicate key value violates unique constraint')) {
+        print('User already liked this recipe.');
+        _fetchLikeStatusAndCount(); 
+      } else {
+        print('Error toggling like: ${e.message}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.message}')),
+          );
+        }
+      }
+    } catch (e) {
+      print('An unexpected error occurred during like toggle: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An unexpected error occurred.')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,42 +204,41 @@ class RecipeDetailsScreen extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child:
-                      recipe.imageUrl.startsWith('http')
-                          ? Image.network(
-                            recipe.imageUrl,
+                  child: widget.recipe.imageUrl.startsWith('http')
+                      ? Image.network(
+                          widget.recipe.imageUrl,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
                             width: double.infinity,
                             height: 250,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) => Container(
-                                  width: double.infinity,
-                                  height: 250,
-                                  color: AppColors.paleGray,
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    color: AppColors.dimGray,
-                                    size: 50,
-                                  ),
-                                ),
-                          )
-                          : Image.asset(
-                            recipe.imageUrl,
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) => Container(
-                                  width: double.infinity,
-                                  height: 250,
-                                  color: AppColors.paleGray,
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color: AppColors.dimGray,
-                                    size: 50,
-                                  ),
-                                ),
+                            color: AppColors.paleGray,
+                            child: Icon(
+                              Icons.broken_image,
+                              color: AppColors.dimGray,
+                              size: 50,
+                            ),
                           ),
+                        )
+                      : Image.asset(
+                          widget.recipe.imageUrl,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            width: double.infinity,
+                            height: 250,
+                            color: AppColors.paleGray,
+                            child: Icon(
+                              Icons.image_not_supported,
+                              color: AppColors.dimGray,
+                              size: 50,
+                            ),
+                          ),
+                        ),
                 ),
                 Positioned(
                   top: 10,
@@ -92,12 +250,10 @@ class RecipeDetailsScreen extends StatelessWidget {
                     ),
                     child: IconButton(
                       icon: Icon(
-                        Icons.favorite_border,
+                        _isLikedByUser ? Icons.favorite : Icons.favorite_border,
                         color: AppColors.tomatoRed,
                       ),
-                      onPressed: () {
-                        print('Favorite button pressed for ${recipe.name}');
-                      },
+                      onPressed: _toggleLike,
                     ),
                   ),
                 ),
@@ -109,7 +265,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipe.name,
+                    widget.recipe.name,
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -126,7 +282,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${recipe.cookingTime} min',
+                        '${widget.recipe.cookingTime} min',
                         style: TextStyle(
                           color: AppColors.dimGray,
                           fontSize: 16,
@@ -136,7 +292,17 @@ class RecipeDetailsScreen extends StatelessWidget {
                       Icon(Icons.people, size: 20, color: AppColors.dimGray),
                       const SizedBox(width: 4),
                       Text(
-                        '${recipe.servings} servings',
+                        '${widget.recipe.servings} servings',
+                        style: TextStyle(
+                          color: AppColors.dimGray,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(Icons.favorite, size: 20, color: AppColors.tomatoRed),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$_likesCount',
                         style: TextStyle(
                           color: AppColors.dimGray,
                           fontSize: 16,
@@ -145,7 +311,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                     ],
                   ),
 
-                  if (recipe.category.isNotEmpty)
+                  if (widget.recipe.category.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Row(
@@ -157,7 +323,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Kategorija: ${recipe.category}',
+                            'Kategorija: ${widget.recipe.category}',
                             style: TextStyle(
                               color: AppColors.dimGray,
                               fontSize: 16,
@@ -168,7 +334,7 @@ class RecipeDetailsScreen extends StatelessWidget {
                     ),
                   const SizedBox(height: 15),
                   Text(
-                    recipe.description,
+                    widget.recipe.description,
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.charcoal,
@@ -183,21 +349,20 @@ class RecipeDetailsScreen extends StatelessWidget {
                     title: 'Sestavine',
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          recipe.ingredients
-                              .map(
-                                (ingredient) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 4.0),
-                                  child: Text(
-                                    '- $ingredient',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: AppColors.charcoal,
-                                    ),
-                                  ),
+                      children: widget.recipe.ingredients
+                          .map(
+                            (ingredient) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4.0),
+                              child: Text(
+                                '- $ingredient',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.charcoal,
                                 ),
-                              )
-                              .toList(),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -208,31 +373,28 @@ class RecipeDetailsScreen extends StatelessWidget {
                     title: 'Navodila za pripravo',
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          recipe.instructions.asMap().entries.map((entry) {
-                            int idx = entry.key;
-                            String instruction = entry.value;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
-                                '${idx + 1}. $instruction',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.charcoal,
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                      children: widget.recipe.instructions.asMap().entries.map((entry) {
+                        int idx = entry.key;
+                        String instruction = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Text(
+                            '${idx + 1}. $instruction',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.charcoal,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                   const SizedBox(height: 30),
 
-                  // Edit Button
                   Center(
                     child: ElevatedButton(
                       onPressed: () {
-                        print('Uredi button pressed for ${recipe.name}');
-                        // TODO
+                        print('Uredi button pressed for ${widget.recipe.name}');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.leafGreen,
@@ -256,16 +418,15 @@ class RecipeDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                  // "Add to cart" (Dodaj v košarico) Button/Text
                   Center(
                     child: GestureDetector(
                       onTap: () {
-                        print('Dodaj v košarico pressed for ${recipe.name}');
-                        if (recipe.ingredients.isNotEmpty) {
+                        print('Dodaj v košarico pressed for ${widget.recipe.name}');
+                        if (widget.recipe.ingredients.isNotEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Dodano v nakupovalni seznam: ${recipe.ingredients.join(', ')}',
+                                'Dodano v nakupovalni seznam: ${widget.recipe.ingredients.join(', ')}',
                               ),
                               duration: const Duration(seconds: 2),
                             ),
