@@ -5,16 +5,14 @@ import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
 import 'package:dish_dash/pages/settings/about_screen.dart';
 import 'package:dish_dash/pages/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:dish_dash/colors/app_colors.dart'; 
-import 'package:supabase_flutter/supabase_flutter.dart'; 
-
+import 'package:dish_dash/colors/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:dish_dash/pages/explore/home_content_screen.dart';
 import 'package:dish_dash/pages/explore/explore_content_screen.dart';
 import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
-import 'package:dish_dash/pages/recipes/create_recipe_screen.dart'; 
-
-
+import 'package:dish_dash/pages/recipes/create_recipe_screen.dart';
+import 'package:dish_dash/pages/challenges/cooking_challenge_screen.dart';
 
 class MainTabScreen extends StatefulWidget {
   const MainTabScreen({super.key});
@@ -26,10 +24,12 @@ class MainTabScreen extends StatefulWidget {
 class _MainTabScreenState extends State<MainTabScreen> {
   int _selectedIndex = 0; // Index for the selected tab
 
+  // Add CookingChallengeScreen to the list of widgets
   static const List<Widget> _widgetOptions = <Widget>[
     HomeContentScreen(),
     ExploreContentScreen(),
     RecipesContentScreen(),
+    CookingChallengeScreen(), // <--- ADD THIS
   ];
 
   void _onItemTapped(int index) {
@@ -43,13 +43,12 @@ class _MainTabScreenState extends State<MainTabScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-              ),
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
         ),
         title: SizedBox(
           height: 80,
@@ -100,29 +99,28 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
-              onTap:
-                  () => {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AboutScreen(),
-                      ),
-                    ),
-                  },
+              onTap: () => {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AboutScreen(),
+                  ),
+                ),
+              },
             ),
             ListTile(
               leading: const Icon(Icons.shopping_bag),
               title: const Text("Shopping List"),
-              onTap:
-                  () => {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ShoppingListScreen(),
-                      ),
-                    ),
-                  },
+              onTap: () => {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ShoppingListScreen(),
+                  ),
+                ),
+              },
             ),
+            // You could also add a dedicated challenges entry here if you prefer
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('LogOut'),
@@ -177,6 +175,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
             _buildNavItem(0, Icons.home, 'Home'),
             _buildNavItem(1, Icons.search, 'Explore'),
             _buildNavItem(2, Icons.menu_book, 'Recipes'),
+            _buildNavItem(3, Icons.stars, 'Challenges'), // <--- ADD THIS NEW NAV ITEM
           ],
         ),
       ),
