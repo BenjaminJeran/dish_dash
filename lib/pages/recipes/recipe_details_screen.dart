@@ -1,8 +1,14 @@
+import 'package:dish_dash/pages/recipes/recipe_details/widgets/IngredientsSectionCard.dart';
+import 'package:dish_dash/pages/recipes/recipe_details/widgets/PreparationStepsSectionCard.dart';
+import 'package:dish_dash/pages/recipes/recipe_details/widgets/RecipeImageSection.dart';
+import 'package:dish_dash/pages/recipes/recipe_details/widgets/RecipeInfoSection.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class RecipeDetailsScreen extends StatefulWidget {
   final Recipe recipe;
@@ -31,7 +37,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
     _fetchLikeStatusAndCount();
   }
 
-
   Future<void> _fetchLikeStatusAndCount() async {
     if (_currentUserId == null) {
       print('User is not logged in. Cannot fetch personal like status.');
@@ -49,7 +54,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
         }
       } on PostgrestException catch (e) {
         print('Error fetching public likes count: ${e.message}');
-        if (mounted) { 
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error fetching public likes data: ${e.message}')),
           );
@@ -91,7 +96,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       }
     } on PostgrestException catch (e) {
       print('Supabase Error fetching like data: ${e.message}');
-      if (mounted) { // Context is safe to use here
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error fetching like data: ${e.message}')),
         );
@@ -148,7 +153,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
     } on PostgrestException catch (e) {
       if (e.message.contains('duplicate key value violates unique constraint')) {
         print('User already liked this recipe.');
-        _fetchLikeStatusAndCount(); 
+        _fetchLikeStatusAndCount();
       } else {
         print('Error toggling like: ${e.message}');
         if (mounted) {
@@ -200,194 +205,33 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: widget.recipe.imageUrl.startsWith('http')
-                      ? Image.network(
-                          widget.recipe.imageUrl,
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                            width: double.infinity,
-                            height: 250,
-                            color: AppColors.paleGray,
-                            child: Icon(
-                              Icons.broken_image,
-                              color: AppColors.dimGray,
-                              size: 50,
-                            ),
-                          ),
-                        )
-                      : Image.asset(
-                          widget.recipe.imageUrl,
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                            width: double.infinity,
-                            height: 250,
-                            color: AppColors.paleGray,
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: AppColors.dimGray,
-                              size: 50,
-                            ),
-                          ),
-                        ),
-                ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        _isLikedByUser ? Icons.favorite : Icons.favorite_border,
-                        color: AppColors.tomatoRed,
-                      ),
-                      onPressed: _toggleLike,
-                    ),
-                  ),
-                ),
-              ],
+            RecipeImageSection(
+              imageUrl: widget.recipe.imageUrl,
+              isLikedByUser: _isLikedByUser,
+              onToggleLike: _toggleLike,
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.recipe.name,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.charcoal,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 20,
-                        color: AppColors.dimGray,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${widget.recipe.cookingTime} min',
-                        style: TextStyle(
-                          color: AppColors.dimGray,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.people, size: 20, color: AppColors.dimGray),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${widget.recipe.servings} servings',
-                        style: TextStyle(
-                          color: AppColors.dimGray,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.favorite, size: 20, color: AppColors.tomatoRed),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$_likesCount',
-                        style: TextStyle(
-                          color: AppColors.dimGray,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (widget.recipe.category.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.category,
-                            size: 20,
-                            color: AppColors.dimGray,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Kategorija: ${widget.recipe.category}',
-                            style: TextStyle(
-                              color: AppColors.dimGray,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: 15),
-                  Text(
-                    widget.recipe.description,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.charcoal,
-                      height: 1.5,
-                    ),
+                  RecipeInfoSection(
+                    recipe: widget.recipe,
+                    likesCount: _likesCount,
                   ),
                   const SizedBox(height: 30),
 
-                  _buildStepCard(
-                    context,
-                    stepNumber: 1,
-                    title: 'Sestavine',
-                    content: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: widget.recipe.ingredients
-                          .map(
-                            (ingredient) => Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: Text(
-                                '- $ingredient',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.charcoal,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
+                  // Ingredients Section Card with emoji
+                  IngredientsSectionCard(
+                    emoji: '🍎', // You can choose any food emoji
+                    ingredients: widget.recipe.ingredients,
                   ),
                   const SizedBox(height: 15),
 
-                  _buildStepCard(
-                    context,
-                    stepNumber: 2,
-                    title: 'Navodila za pripravo',
-                    content: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: widget.recipe.instructions.asMap().entries.map((entry) {
-                        int idx = entry.key;
-                        String instruction = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Text(
-                            '${idx + 1}. $instruction',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.charcoal,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                  // Preparation Steps Section Card with emoji
+                  PreparationStepsSectionCard(
+                    emoji: '👨‍🍳', // You can choose any cook/kitchen emoji
+                    instructions: widget.recipe.instructions,
                   ),
                   const SizedBox(height: 30),
 
@@ -395,6 +239,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         print('Uredi button pressed for ${widget.recipe.name}');
+                        // TODO: Implement actual edit functionality
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.leafGreen,
@@ -417,7 +262,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
-
                   Center(
                     child: GestureDetector(
                       onTap: () {
@@ -458,62 +302,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStepCard(
-    BuildContext context, {
-    required int stepNumber,
-    required String title,
-    required Widget content,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.leafGreen.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: AppColors.leafGreen,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '$stepNumber',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.charcoal,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                content,
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
