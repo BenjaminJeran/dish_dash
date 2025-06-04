@@ -1,5 +1,6 @@
+// lib/pages/settings/about_screen.dart
 import 'package:flutter/material.dart';
-import 'package:dish_dash/colors/app_colors.dart'; // Ensure this path is correct
+import 'package:dish_dash/colors/app_colors.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -16,14 +17,10 @@ class AboutScreen extends StatelessWidget {
         ),
         title: SizedBox(
           height: 80,
-          child: Center(
-            child: Image.asset('assets/logo.png', height: 80),
-          ), // Your app logo
+          child: Center(child: Image.asset('assets/logo.png', height: 80)),
         ),
         centerTitle: true,
-        actions: const [
-          SizedBox(width: 50), // To balance the back button and center the logo
-        ],
+        actions: const [SizedBox(width: 50)],
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.charcoal,
@@ -37,7 +34,7 @@ class AboutScreen extends StatelessWidget {
               Icon(Icons.info_outline, size: 80, color: Colors.grey),
               SizedBox(height: 20),
               Text(
-                'Dish Dash App',
+                'Aplikacija Dish Dash',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -46,18 +43,18 @@ class AboutScreen extends StatelessWidget {
               ),
               SizedBox(height: 10),
               Text(
-                'Version 1.0.0',
+                'Različica 1.0.0',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               SizedBox(height: 20),
               Text(
-                'Dish Dash is your culinary companion, helping you explore new recipes and track your cooking challenges.',
+                'Dish Dash je tvoj kulinarični spremljevalec, ki ti pomaga raziskovati nove recepte in spremljati kuharske izzive.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               SizedBox(height: 20),
               Text(
-                '© 2023 Dish Dash Inc. All rights reserved.',
+                '© 2023 Dish Dash Inc. Vse pravice pridržane.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
