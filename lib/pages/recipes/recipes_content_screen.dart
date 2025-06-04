@@ -1,3 +1,4 @@
+import 'package:dish_dash/pages/recipes/update_recipe_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,7 +15,7 @@ class RecipesContentScreen extends StatefulWidget {
 class _RecipesContentScreenState extends State<RecipesContentScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   Future<List<Map<String, dynamic>>>? _recipesFuture;
-  List<Recipe> _recipes = []; 
+  List<Recipe> _recipes = [];
 
   @override
   void initState() {
@@ -78,13 +79,10 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
     } on PostgrestException catch (e) {
       print('Supabase Database Error deleting recipe: ${e.message}');
       final int originalIndex = _recipes.indexWhere((recipe) => recipe.id == recipeId);
-      if (originalIndex == -1) { // Only re-add if it's not already there (means it was removed locally)
-         // This assumes we stored the removedRecipe somewhere, which we did.
-         // If you have a more complex state management, you might need to adjust.
-         // For simplicity here, we'll re-fetch in case of an error to ensure consistency.
-         setState(() {
-           _recipesFuture = _fetchRecipes(); // Re-fetch on error to ensure consistency
-         });
+      if (originalIndex == -1) {
+          setState(() {
+            _recipesFuture = _fetchRecipes();
+          });
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -114,6 +112,28 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
         );
       }
     }
+  }
+
+  void _editRecipe(Recipe recipe) {
+
+     Navigator.push(
+       context,
+       MaterialPageRoute(
+         builder: (context) => UpdateRecipeScreen(recipe: recipe),
+       ),
+     ).then((_) => _fetchRecipes()); 
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Uredi recept: ${recipe.name}',
+            style: TextStyle(color: AppColors.white),
+          ),
+          backgroundColor: AppColors.paleLime,
+        ),
+      );
+    }
+    print('Edit recipe: ${recipe.name}');
   }
 
   @override
@@ -182,7 +202,6 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
               ),
             );
           } else {
-           
             return ListView.builder(
               padding: const EdgeInsets.all(16.0),
               itemCount: _recipes.length,
@@ -193,51 +212,69 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: Dismissible(
                     key: ValueKey(recipe.id),
-                    direction: DismissDirection.endToStart,
+                    direction: DismissDirection.horizontal,
                     background: Container(
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: AppColors.charcoal,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: const Icon(Icons.edit, color: Colors.white, size: 36),
+                    ),
+                    secondaryBackground: Container(
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       decoration: BoxDecoration(
-                        color: AppColors.tomatoRed,
+                        color: AppColors.tomatoRed, // Color for delete
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: const Icon(Icons.delete, color: Colors.white, size: 36),
                     ),
                     confirmDismiss: (direction) async {
-                      return await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(
-                              'Potrdi izbris',
-                              style: TextStyle(color: AppColors.charcoal),
-                            ),
-                            content: Text(
-                              'Ali ste prepričani, da želite izbrisati ta recept?',
-                              style: TextStyle(color: AppColors.dimGray),
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(false),
-                                child: Text(
-                                  'Prekliči',
-                                  style: TextStyle(color: AppColors.dimGray),
-                                ),
+                      if (direction == DismissDirection.endToStart) { // Delete
+                        return await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text(
+                                'Potrdi izbris',
+                                style: TextStyle(color: AppColors.charcoal),
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(true),
-                                child: Text(
-                                  'Izbriši',
-                                  style: TextStyle(color: AppColors.tomatoRed),
-                                ),
+                              content: Text(
+                                'Ali ste prepričani, da želite izbrisati ta recept?',
+                                style: TextStyle(color: AppColors.dimGray),
                               ),
-                            ],
-                          );
-                        },
-                      );
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: Text(
+                                    'Prekliči',
+                                    style: TextStyle(color: AppColors.dimGray),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: Text(
+                                    'Izbriši',
+                                    style: TextStyle(color: AppColors.tomatoRed),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } else if (direction == DismissDirection.startToEnd) { // Edit
+                        _editRecipe(recipe);
+                        return false; // Don't dismiss the item for edit
+                      }
+                      return false;
                     },
                     onDismissed: (direction) {
-                      _deleteRecipe(recipe.id);
+                      if (direction == DismissDirection.endToStart) { // Delete
+                        _deleteRecipe(recipe.id);
+                      }
+                      // No explicit action needed for onDismissed when editing, as we return false from confirmDismiss
                     },
                     child: Card(
                       margin: EdgeInsets.zero,
