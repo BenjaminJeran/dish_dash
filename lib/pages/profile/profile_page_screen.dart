@@ -115,7 +115,7 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    const CookingChallengeBar(progress: 0.75),
+                    const CookingChallengeBar(),
                   ],
                 ),
               ),

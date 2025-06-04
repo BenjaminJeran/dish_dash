@@ -31,8 +31,12 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
     _allChallengesFuture = _challengeService.fetchAllChallenges();
 
     if (userId != null) {
-      _joinedChallengeIdsFuture = _challengeService.fetchUserChallenges(userId)
-          .then((userChallenges) => userChallenges.map((uc) => uc.challengeId).toSet());
+      _joinedChallengeIdsFuture = _challengeService
+          .fetchUserChallenges(userId)
+          .then(
+            (userChallenges) =>
+                userChallenges.map((uc) => uc.challengeId).toSet(),
+          );
     } else {
       _joinedChallengeIdsFuture = Future.value({});
     }
@@ -49,7 +53,10 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
   Future<void> _joinChallenge(Challenge challenge) async {
     if (_supabase.auth.currentUser == null) {
       if (mounted) {
-        ToastManager.showInfoToast(context, 'Please log in to join challenges.');
+        ToastManager.showInfoToast(
+          context,
+          'Prosimo, prijavite se za pridružitev izzivom.',
+        );
       }
       return;
     }
@@ -59,7 +66,7 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
       if (mounted) {
         ToastManager.showSuccessToast(
           context,
-          'Successfully joined "${challenge.title}"!',
+          'Uspešno ste se pridružili izzivu "${challenge.title}"!',
         );
         Navigator.pop(context, true);
       }
@@ -67,7 +74,7 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
       if (mounted) {
         ToastManager.showErrorToast(
           context,
-          'Failed to join challenge: ${_formatErrorMessage(e)}',
+          'Pridružitev izzivu ni uspela: ${_formatErrorMessage(e)}',
         );
         _fetchChallengesAndJoinedChallenges();
       }
@@ -78,33 +85,42 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Browse Challenges'),
+        title: const Text('Brskaj po izzivih'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.charcoal,
       ),
-      body: FutureBuilder<List<dynamic>>( 
+      body: FutureBuilder<List<dynamic>>(
         future: Future.wait([_allChallengesFuture, _joinedChallengeIdsFuture]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error loading challenges: ${_formatErrorMessage(snapshot.error)}'));
+            return Center(
+              child: Text(
+                'Napaka pri nalaganju izzivov: ${_formatErrorMessage(snapshot.error)}',
+              ),
+            );
           } else {
-            final List<Challenge> allChallenges = snapshot.data![0] as List<Challenge>;
-            final Set<String> joinedChallengeIds = snapshot.data![1] as Set<String>;
+            final List<Challenge> allChallenges =
+                snapshot.data![0] as List<Challenge>;
+            final Set<String> joinedChallengeIds =
+                snapshot.data![1] as Set<String>;
 
-            final List<Challenge> availableChallenges = allChallenges
-                .where((challenge) => !joinedChallengeIds.contains(challenge.id))
-                .toList();
+            final List<Challenge> availableChallenges =
+                allChallenges
+                    .where(
+                      (challenge) => !joinedChallengeIds.contains(challenge.id),
+                    )
+                    .toList();
 
             if (availableChallenges.isEmpty) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Text(
-                    'No new challenges available. You have joined all available challenges or there are none.',
+                    'Ni novih izzivov. Pridružili ste se vsem ali pa trenutno ni razpoložljivih izzivov.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, color: AppColors.dimGray),
                   ),
@@ -113,14 +129,15 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
             } else {
               return ListView.builder(
                 padding: const EdgeInsets.all(16.0),
-                itemCount: availableChallenges.length, 
+                itemCount: availableChallenges.length,
                 itemBuilder: (context, index) {
                   final challenge = availableChallenges[index];
                   return Card(
                     margin: const EdgeInsets.only(bottom: 16.0),
                     elevation: 3,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -144,7 +161,7 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Duration: ${challenge.durationDays} days',
+                            'Trajanje: ${challenge.durationDays} dni',
                             style: const TextStyle(
                               fontSize: 14,
                               fontStyle: FontStyle.italic,
@@ -160,9 +177,10 @@ class _BrowseChallengesScreenState extends State<BrowseChallengesScreen> {
                                 backgroundColor: AppColors.leafGreen,
                                 foregroundColor: AppColors.white,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                              child: const Text('Join Challenge'),
+                              child: const Text('Pridruži se izzivu'),
                             ),
                           ),
                         ],
