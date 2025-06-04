@@ -1,5 +1,6 @@
+// lib/pages/settings/push_notifications_screen.dart
 import 'package:flutter/material.dart';
-import 'package:dish_dash/colors/app_colors.dart'; // Ensure this path is correct
+import 'package:dish_dash/colors/app_colors.dart';
 
 class PushNotificationsScreen extends StatelessWidget {
   const PushNotificationsScreen({super.key});
@@ -10,20 +11,14 @@ class PushNotificationsScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: SizedBox(
           height: 80,
-          child: Center(
-            child: Image.asset('assets/logo.png', height: 80),
-          ), // Your app logo
+          child: Center(child: Image.asset('assets/logo.png', height: 80)),
         ),
         centerTitle: true,
-        actions: const [
-          SizedBox(width: 50), // To balance the back button and center the logo
-        ],
+        actions: const [SizedBox(width: 50)],
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.charcoal,
@@ -37,17 +32,16 @@ class PushNotificationsScreen extends StatelessWidget {
               Icon(Icons.notifications_none, size: 80, color: Colors.grey),
               SizedBox(height: 20),
               Text(
-                'Customize your notification preferences.',
+                'Prilagodi svoje nastavitve obvestil.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
               SizedBox(height: 10),
               Text(
-                'You can enable or disable various types of alerts, sounds, and vibrations here.',
+                'Tukaj lahko omogočiš ali onemogočiš različne vrste opozoril, zvokov in vibracij.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
-              // You could add SwitchListTile widgets here for actual toggles
             ],
           ),
         ),
