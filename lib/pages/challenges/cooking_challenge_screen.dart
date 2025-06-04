@@ -1,4 +1,3 @@
-// lib/pages/challenges/cooking_challenge_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/colors/app_colors.dart';
@@ -25,19 +24,21 @@ class OverallCookingProgressBar extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.charcoal),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppColors.charcoal,
+          ),
         ),
         const SizedBox(height: 12),
         ClipRRect(
-          borderRadius: BorderRadius.circular(15), // Larger border radius
+          borderRadius: BorderRadius.circular(15),
           child: LinearProgressIndicator(
             value: progress,
-            minHeight: 25, // Taller progress bar
-            backgroundColor: AppColors.paleGray, // Lighter background
-            valueColor:
-                const AlwaysStoppedAnimation<Color>(AppColors.leafGreen),
+            minHeight: 25,
+            backgroundColor: AppColors.paleGray,
+            valueColor: const AlwaysStoppedAnimation<Color>(
+              AppColors.leafGreen,
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -51,7 +52,7 @@ class OverallCookingProgressBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 16), // Space before challenge list
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -86,7 +87,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
         _userChallengesFuture = Future.value([]);
       });
       if (mounted) {
-        ToastManager.showInfoToast(context, 'Please log in to view challenges.');
+        ToastManager.showInfoToast(context, 'Za ogled izzivov se prijavite.');
       }
     }
   }
@@ -105,7 +106,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
       if (mounted) {
         ToastManager.showSuccessToast(
           context,
-          'Day ${userChallenge.currentDay + 1} of "${userChallenge.challenge?.title}" marked complete!',
+          'Dan ${userChallenge.currentDay + 1} v izzivu "${userChallenge.challenge?.title}" označen kot dokončan!',
         );
         _fetchUserChallenges();
       }
@@ -113,7 +114,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
       if (mounted) {
         ToastManager.showErrorToast(
           context,
-          'Failed to mark day complete: ${_formatErrorMessage(e)}',
+          'Označevanje dneva ni uspelo: ${_formatErrorMessage(e)}',
         );
       }
     }
@@ -125,7 +126,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
       if (mounted) {
         ToastManager.showSuccessToast(
           context,
-          'Successfully left "${userChallenge.challenge?.title ?? 'the challenge'}"!',
+          'Uspešno ste zapustili izziv "${userChallenge.challenge?.title ?? 'izziv'}"!',
         );
         _fetchUserChallenges();
       }
@@ -133,7 +134,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
       if (mounted) {
         ToastManager.showErrorToast(
           context,
-          'Failed to leave challenge: ${_formatErrorMessage(e)}',
+          'Zapustitev izziva ni uspela: ${_formatErrorMessage(e)}',
         );
         _fetchUserChallenges();
       }
@@ -164,7 +165,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
     );
 
     if (challengeJoined == true) {
-      _fetchUserChallenges(); 
+      _fetchUserChallenges();
     }
   }
 
@@ -177,8 +178,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.charcoal,
-        // Removed the IconButton from actions
-        actions: const [], // Empty actions list
+        actions: const [],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -188,18 +188,24 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData || snapshot.data!.isEmpty) {
-                 ToastManager.showErrorToast(context, 'Failed to load challenges: ${_formatErrorMessage(snapshot.error)}');
+              if (snapshot.connectionState != ConnectionState.done ||
+                  !snapshot.hasData ||
+                  snapshot.data!.isEmpty) {
+                ToastManager.showErrorToast(
+                  context,
+                  'Napaka pri nalaganju izzivov: ${_formatErrorMessage(snapshot.error)}',
+                );
               }
-              return Center(child: Text('Error: ${_formatErrorMessage(snapshot.error)}'));
+              return Center(
+                child: Text('Napaka: ${_formatErrorMessage(snapshot.error)}'),
+              );
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              // This block is already good for when there are NO challenges
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'No active challenges. Join one now!',
+                      'Ni aktivnih izzivov. Pridružite se enemu!',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16, color: AppColors.dimGray),
                     ),
@@ -207,12 +213,17 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                     ElevatedButton.icon(
                       onPressed: _navigateToBrowseChallenges,
                       icon: const Icon(Icons.add_circle_outline),
-                      label: const Text('Find New Challenges'),
+                      label: const Text('Najdi nove izzive'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.leafGreen,
                         foregroundColor: AppColors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ],
@@ -220,7 +231,9 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
               );
             } else {
               final List<UserChallenge> userChallenges = snapshot.data!;
-              final double overallProgress = _calculateOverallProgress(userChallenges);
+              final double overallProgress = _calculateOverallProgress(
+                userChallenges,
+              );
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,10 +245,13 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                       itemBuilder: (context, index) {
                         final userChallenge = userChallenges[index];
                         final challengeTitle =
-                            userChallenge.challenge?.title ?? 'Unknown Challenge';
+                            userChallenge.challenge?.title ?? 'Neznan izziv';
                         final totalDays = userChallenge.durationDays;
                         final currentDay = userChallenge.currentDay;
-                        final progress = totalDays > 0 ? (currentDay / totalDays).clamp(0.0, 1.0) : 0.0;
+                        final progress =
+                            totalDays > 0
+                                ? (currentDay / totalDays).clamp(0.0, 1.0)
+                                : 0.0;
 
                         return Dismissible(
                           key: ValueKey(userChallenge.id),
@@ -247,10 +263,14 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                             child: const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.exit_to_app, color: Colors.white, size: 30),
+                                Icon(
+                                  Icons.exit_to_app,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
                                 SizedBox(height: 4),
                                 Text(
-                                  'Leave',
+                                  'Zapusti',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -264,21 +284,25 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(
-                                  title: const Text('Confirm Leave'),
+                                  title: const Text('Potrditev'),
                                   content: Text(
-                                      'Are you sure you want to leave "${challengeTitle}"? This cannot be undone.'),
+                                    'Ali ste prepričani, da želite zapustiti "${challengeTitle}"? To dejanje ni mogoče razveljaviti.',
+                                  ),
                                   actions: <Widget>[
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
+                                      onPressed:
+                                          () =>
+                                              Navigator.of(context).pop(false),
+                                      child: const Text('Prekliči'),
                                     ),
                                     ElevatedButton(
-                                      onPressed: () => Navigator.of(context).pop(true),
+                                      onPressed:
+                                          () => Navigator.of(context).pop(true),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,
                                         foregroundColor: Colors.white,
                                       ),
-                                      child: const Text('Leave'),
+                                      child: const Text('Zapusti'),
                                     ),
                                   ],
                                 );
@@ -292,7 +316,8 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                             margin: const EdgeInsets.symmetric(vertical: 8.0),
                             elevation: 2,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
@@ -302,7 +327,8 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                                     children: [
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               challengeTitle,
@@ -315,12 +341,18 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                                             const SizedBox(height: 4),
                                             Text(
                                               userChallenge.isCompleted
-                                                  ? 'Completed!'
-                                                  : 'Day $currentDay of $totalDays',
+                                                  ? 'Zaključeno!'
+                                                  : 'Dan $currentDay od $totalDays',
                                               style: TextStyle(
                                                 fontSize: 14,
-                                                color: userChallenge.isCompleted ? AppColors.leafGreen : AppColors.dimGray,
-                                                fontWeight: userChallenge.isCompleted ? FontWeight.bold : FontWeight.normal,
+                                                color:
+                                                    userChallenge.isCompleted
+                                                        ? AppColors.leafGreen
+                                                        : AppColors.dimGray,
+                                                fontWeight:
+                                                    userChallenge.isCompleted
+                                                        ? FontWeight.bold
+                                                        : FontWeight.normal,
                                               ),
                                             ),
                                           ],
@@ -333,28 +365,36 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                                         child: CircularProgressIndicator(
                                           value: progress,
                                           backgroundColor: AppColors.paleGray,
-                                          valueColor: AlwaysStoppedAnimation<Color>(
-                                            userChallenge.isCompleted ? AppColors.leafGreen : AppColors.leafGreen,
-                                          ),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                AppColors.leafGreen,
+                                              ),
                                           strokeWidth: 5,
                                         ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-                                  if (!userChallenge.isCompleted && userChallenge.currentDay < totalDays)
+                                  if (!userChallenge.isCompleted &&
+                                      userChallenge.currentDay < totalDays)
                                     Align(
                                       alignment: Alignment.bottomRight,
                                       child: ElevatedButton(
-                                        onPressed: () => _markDayComplete(userChallenge),
+                                        onPressed:
+                                            () =>
+                                                _markDayComplete(userChallenge),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: AppColors.leafGreen,
                                           foregroundColor: AppColors.white,
                                           shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8)),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
                                         ),
-                                        child: const Text('Mark Day Complete'),
+                                        child: const Text(
+                                          'Označi dan kot zaključen',
+                                        ),
                                       ),
                                     )
                                   else if (userChallenge.isCompleted)
@@ -363,7 +403,7 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                                       child: Padding(
                                         padding: EdgeInsets.only(top: 8.0),
                                         child: Text(
-                                          'Challenge Completed!',
+                                          'Izziv zaključen!',
                                           style: TextStyle(
                                             color: AppColors.leafGreen,
                                             fontWeight: FontWeight.bold,
@@ -385,13 +425,21 @@ class _CookingChallengeScreenState extends State<CookingChallengeScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _navigateToBrowseChallenges,
                         icon: const Icon(Icons.add_circle_outline),
-                        label: const Text('Find More Challenges'),
+                        label: const Text('Najdi več izzivov'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.leafGreen,
                           foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
