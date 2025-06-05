@@ -71,15 +71,17 @@ class _MainTabScreenState extends State<MainTabScreen> {
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
       drawer: Drawer(
+        backgroundColor: AppColors.white,
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
+
               decoration: BoxDecoration(color: AppColors.leafGreen),
               child: const Text(
                 'Meni Dish Dash',
                 style: TextStyle(color: AppColors.white, fontSize: 24),
-              ),
+              ),),
             ),
             ListTile(
               leading: const Icon(Icons.settings),
@@ -159,18 +161,6 @@ class _MainTabScreenState extends State<MainTabScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateRecipeScreen()),
-          );
-        },
-        backgroundColor: AppColors.leafGreen,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: AppColors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       bottomNavigationBar: BottomAppBar(
         color: AppColors.white,
         surfaceTintColor: AppColors.white,
@@ -187,6 +177,34 @@ class _MainTabScreenState extends State<MainTabScreen> {
           ],
         ),
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 50.0,
+        ), 
+        child: SizedBox(
+          width:
+              70.0, 
+          height: 70.0, 
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateRecipeScreen(),
+                ),
+              );
+            },
+            backgroundColor: AppColors.leafGreen,
+            shape: const CircleBorder(),
+            child: const Icon(
+              Icons.add,
+              color: AppColors.white,
+              size: 35.0,
+            ), 
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
   }
 

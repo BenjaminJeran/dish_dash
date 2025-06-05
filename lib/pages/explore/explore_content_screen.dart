@@ -35,7 +35,7 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchFilteredRecipes(); 
+    _fetchFilteredRecipes();
   }
 
   @override
@@ -45,6 +45,8 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
   }
 
   Future<void> _fetchFilteredRecipes() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -56,10 +58,9 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
       if (_searchQuery.isEmpty && _selectedCategory == null) {
         data = await supabase.rpc(
           'get_recommended_recipes_random_likes',
-          params: {'num_recipes': 15}, 
+          params: {'num_recipes': 15},
         );
       } else {
-        
         final Map<String, dynamic> rpcParams = {
           'search_query': _searchQuery.isNotEmpty ? _searchQuery : null,
           'category_filter': _selectedCategory,
@@ -74,17 +75,20 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
       final List<Map<String, dynamic>> recipeMaps =
           List<Map<String, dynamic>>.from(data);
 
+      if (!mounted) return;
       setState(() {
         _filteredRecipes = recipeMaps.map((map) => Recipe.fromMap(map)).toList();
         _isLoading = false;
       });
     } on PostgrestException catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Napaka pri nalaganju receptov: ${e.message}';
         _isLoading = false;
       });
       print('Supabase Error in _fetchFilteredRecipes: ${e.message}');
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Prišlo je do nepričakovanih napake pri nalaganju receptov: $e';
         _isLoading = false;
@@ -115,7 +119,7 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
     } else if (_selectedCategory != null) {
       return 'Recepti v kategoriji "${_selectedCategory!}"';
     } else {
-      return 'Priporočeni recepti'; 
+      return 'Priporočeni recepti';
     }
   }
 
