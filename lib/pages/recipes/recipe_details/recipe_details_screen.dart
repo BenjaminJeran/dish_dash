@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
-
+import 'package:dish_dash/models/comment.dart';
 
 class RecipeDetailsScreen extends StatefulWidget {
   final Recipe recipe;
@@ -25,10 +25,16 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
   bool _isLikedByUser = false;
   String? _currentUserId;
 
+  final TextEditingController _commentController =
+      TextEditingController(); 
+  List<Comment> _comments = []; 
+  bool _isLoadingComments = false;
+  String? _commentErrorMessage; 
   @override
   void initState() {
     super.initState();
     _currentUserId = supabase.auth.currentUser?.id;
+    _fetchComments(); 
   }
 
   @override
@@ -37,9 +43,15 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
     _fetchLikeStatusAndCount();
   }
 
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchLikeStatusAndCount() async {
     if (_currentUserId == null) {
-      print('User is not logged in. Cannot fetch personal like status.');
+      print('Uporabnik ni prijavljen. Ni mogoče pridobiti statusa všečkov.');
       try {
         final PostgrestResponse countResponse = await supabase
             .from('likes')
@@ -53,17 +65,23 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
           });
         }
       } on PostgrestException catch (e) {
-        print('Error fetching public likes count: ${e.message}');
+        print('Napaka pri pridobivanju števila javnih všečkov: ${e.message}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error fetching public likes data: ${e.message}')),
+            SnackBar(
+              content: Text('Napaka pri pridobivanju podatkov o javnih všečkih: ${e.message}'),
+            ),
           );
         }
       } catch (e) {
-        print('An unexpected error occurred fetching public likes: $e');
+        print('Prišlo je do nepričakovane napake med pridobivanjem javnih všečkov: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('An unexpected error occurred fetching public likes.')),
+            const SnackBar(
+              content: Text(
+                'Prišlo je do nepričakovane napake med pridobivanjem javnih všečkov.',
+              ),
+            ),
           );
         }
       }
@@ -95,17 +113,17 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
         });
       }
     } on PostgrestException catch (e) {
-      print('Supabase Error fetching like data: ${e.message}');
+      print('Supabase napaka pri pridobivanju podatkov o všečkih: ${e.message}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching like data: ${e.message}')),
+          SnackBar(content: Text('Napaka pri pridobivanju podatkov o všečkih: ${e.message}')),
         );
       }
     } catch (e) {
-      print('An unexpected error occurred: $e');
+      print('Prišlo je do nepričakovane napake: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred.')),
+          const SnackBar(content: Text('Prišlo je do nepričakovane napake.')),
         );
       }
     }
@@ -115,7 +133,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
     if (_currentUserId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please log in to like recipes.')),
+          const SnackBar(content: Text('Prosimo, prijavite se, da lahko všečkate recepte.')),
         );
       }
       return;
@@ -135,7 +153,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
             _likesCount--;
           });
         }
-        print('Recipe unliked!');
+        print('Receptu je bil odstranjen všeček!');
       } else {
         await supabase.from('likes').insert({
           'user_id': _currentUserId!,
@@ -148,25 +166,144 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
             _likesCount++;
           });
         }
-        print('Recipe liked!');
+        print('Recept je bil všečkan!');
       }
     } on PostgrestException catch (e) {
-      if (e.message.contains('duplicate key value violates unique constraint')) {
-        print('User already liked this recipe.');
+      if (e.message.contains(
+        'duplicate key value violates unique constraint',
+      )) {
+        print('Uporabnik je ta recept že všečkal.');
         _fetchLikeStatusAndCount();
       } else {
-        print('Error toggling like: ${e.message}');
+        print('Napaka pri preklapljanju všečka: ${e.message}');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.message}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Napaka: ${e.message}')));
         }
       }
     } catch (e) {
-      print('An unexpected error occurred during like toggle: $e');
+      print('Prišlo je do nepričakovane napake med preklapljanjem všečka: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred.')),
+          const SnackBar(content: Text('Prišlo je do nepričakovane napake.')),
+        );
+      }
+    }
+  }
+
+  // zA KOMENTARJE
+  Future<void> _fetchComments() async {
+    setState(() {
+      _isLoadingComments = true;
+      _commentErrorMessage = null;
+    });
+
+    try {
+      final List<dynamic> data = await supabase
+          .from('comments')
+          .select(
+            '*, users(name)',
+          ) 
+          .eq('recipe_id', widget.recipe.id)
+          .order('created_at', ascending: true);
+
+      final List<Comment> fetchedComments =
+          data.map((map) {
+            final commentMap = Map<String, dynamic>.from(map);
+            return Comment.fromMap(commentMap);
+          }).toList();
+
+      if (mounted) {
+        setState(() {
+          _comments = fetchedComments;
+          _isLoadingComments = false;
+        });
+      }
+    } on PostgrestException catch (e) {
+      print('Supabase napaka pri nalaganju komentarjev: ${e.message}');
+      if (mounted) {
+        setState(() {
+          _commentErrorMessage =
+              'Napaka pri nalaganju komentarjev: ${e.message}';
+          _isLoadingComments = false;
+        });
+      }
+    } catch (e) {
+      print('Nepričakovana napaka pri nalaganju komentarjev: $e');
+      if (mounted) {
+        setState(() {
+          _commentErrorMessage =
+              'Nepričakovana napaka pri nalaganju komentarjev.';
+          _isLoadingComments = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _postComment() async {
+    final String commentText = _commentController.text.trim();
+
+    if (commentText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Komentar ne sme biti prazen.')),
+      );
+      return;
+    }
+
+    if (_currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Prosimo, prijavite se za objavo komentarja.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await supabase.from('comments').insert({
+        'user_id': _currentUserId!,
+        'recipe_id': widget.recipe.id,
+        'comment_text': commentText,
+      });
+
+      _commentController.clear();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Komentar uspešno objavljen!',
+              style: TextStyle(color: AppColors.white),
+            ),
+            backgroundColor: AppColors.leafGreen,
+          ),
+        );
+      }
+      _fetchComments(); 
+    } on PostgrestException catch (e) {
+      print('Supabase napaka pri objavi komentarja: ${e.message}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Napaka pri objavi komentarja: ${e.message}',
+              style: TextStyle(color: AppColors.white),
+            ),
+            backgroundColor: AppColors.tomatoRed,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Nepričakovana napaka pri objavi komentarja: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Nepričakovana napaka pri objavi komentarja.',
+              style: TextStyle(color: AppColors.white),
+            ),
+            backgroundColor: AppColors.tomatoRed,
+          ),
         );
       }
     }
@@ -221,82 +358,133 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Ingredients Section Card with emoji
                   IngredientsSectionCard(
-                    emoji: '🍎', // You can choose any food emoji
+                    emoji: '🍎',
                     ingredients: widget.recipe.ingredients,
                   ),
                   const SizedBox(height: 15),
 
-                  // Preparation Steps Section Card with emoji
                   PreparationStepsSectionCard(
-                    emoji: '👨‍🍳', // You can choose any cook/kitchen emoji
+                    emoji: '👨‍🍳',
                     instructions: widget.recipe.instructions,
                   ),
                   const SizedBox(height: 30),
 
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        print('Uredi button pressed for ${widget.recipe.name}');
-                        // TODO: Implement actual edit functionality
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.leafGreen,
-                        minimumSize: Size(
-                          MediaQuery.of(context).size.width * 0.8,
-                          50,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        'Uredi',
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                  Text(
+                    'Komentarji',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.charcoal,
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        print('Dodaj v košarico pressed for ${widget.recipe.name}');
-                        if (widget.recipe.ingredients.isNotEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Dodano v nakupovalni seznam: ${widget.recipe.ingredients.join(', ')}',
-                              ),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Ni sestavin za dodati v nakupovalni seznam.',
-                              ),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        'Dodaj v košarico',
-                        style: TextStyle(
-                          color: AppColors.leafGreen,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
+
+                  TextField(
+                    controller: _commentController,
+                    decoration: InputDecoration(
+                      hintText: 'Napišite komentar...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.paleGray,
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.send, color: AppColors.leafGreen),
+                        onPressed: _postComment,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 15,
                       ),
                     ),
+                    maxLines: null, 
                   ),
+                  const SizedBox(height: 20),
+
+                  _isLoadingComments
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.leafGreen,
+                          ),
+                        )
+                      : _commentErrorMessage != null
+                          ? Center(
+                              child: Text(
+                                _commentErrorMessage!,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.tomatoRed,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                          : _comments.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    'Trenutno še ni komentarjev. Bodite prvi!',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.dimGray,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap:
+                                      true, 
+                                  physics:
+                                      const NeverScrollableScrollPhysics(),
+                                  itemCount: _comments.length,
+                                  itemBuilder: (context, index) {
+                                    final comment = _comments[index];
+                                    return Card(
+                                      margin: const EdgeInsets.only(bottom: 10),
+                                      color: AppColors.paleGray,
+                                      elevation: 1,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              comment.userName ??
+                                                  'Neznan uporabnik',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.charcoal,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              comment.commentText,
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                color: AppColors.dimGray,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Align(
+                                              alignment: Alignment.bottomRight,
+                                              child: Text(
+                                                '${comment.createdAt.day}.${comment.createdAt.month}.${comment.createdAt.year}',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.dimGray,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                 ],
               ),
             ),
