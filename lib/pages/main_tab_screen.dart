@@ -76,13 +76,12 @@ class _MainTabScreenState extends State<MainTabScreen> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-
               decoration: BoxDecoration(color: AppColors.leafGreen),
               child: const Text(
                 'Meni Dish Dash',
                 style: TextStyle(color: AppColors.white, fontSize: 24),
-              ),),
-            ),
+              ),
+            ), // Removed the extra parenthesis here
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Nastavitve'),
@@ -178,13 +177,10 @@ class _MainTabScreenState extends State<MainTabScreen> {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(
-          bottom: 50.0,
-        ), 
+        padding: const EdgeInsets.only(bottom: 50.0),
         child: SizedBox(
-          width:
-              70.0, 
-          height: 70.0, 
+          width: 70.0,
+          height: 70.0,
           child: FloatingActionButton(
             onPressed: () {
               Navigator.push(
@@ -196,11 +192,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
             },
             backgroundColor: AppColors.leafGreen,
             shape: const CircleBorder(),
-            child: const Icon(
-              Icons.add,
-              color: AppColors.white,
-              size: 35.0,
-            ), 
+            child: const Icon(Icons.add, color: AppColors.white, size: 35.0),
           ),
         ),
       ),

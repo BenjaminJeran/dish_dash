@@ -6,7 +6,6 @@ import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/shopping_list_item.dart';
 import 'package:dish_dash/services/shopping_list_service.dart'; 
 
-
 class ShoppingListScreen extends StatefulWidget {
   const ShoppingListScreen({super.key});
 
@@ -47,16 +46,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   Future<void> _addItem() async {
     final newItemName = _newItemController.text.trim();
-    if (userId == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Prosimo, prijavite se, da dodate elemente na seznam.',
-            ),
-          ),
-        );
-      }
+    if (_userId == null) {
+      _showSnackBar('Please log in to add items to your list.');
       return;
     }
 
@@ -82,6 +73,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       print('Error deleting item: $e');
     }
   }
+
   Future<void> _incrementQuantity(ShoppingListItem item) async {
     if (_userId == null || item.id == null) return;
     try {
@@ -234,6 +226,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                             child: CircularProgressIndicator(),
                           );
                         }
+
                         final shoppingItems = snapshot.data ?? [];
 
                         if (shoppingItems.isEmpty) {
@@ -251,6 +244,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                             ),
                           );
                         }
+
                         return RefreshIndicator(
                           onRefresh: _refreshList,
                           child: ListView.builder(
@@ -340,7 +334,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                       ),
                                     ],
                                   ),
-
                                 ),
                               );
                             },
@@ -350,7 +343,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                     ),
             ),
             const SizedBox(height: 20),
-         
+          
           ],
         ),
       ),
