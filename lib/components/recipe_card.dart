@@ -29,7 +29,7 @@ class RecipeCard extends StatelessWidget {
           );
         },
         child: SizedBox(
-          height: 160, 
+          height: 160,
           child: Stack(
             children: [
               Positioned.fill(
@@ -41,7 +41,7 @@ class RecipeCard extends StatelessWidget {
                             Container(
                           color: AppColors.paleGray,
                           child: Icon(Icons.broken_image,
-                              color: AppColors.dimGray, size: 40), 
+                              color: AppColors.dimGray, size: 40),
                         ),
                       )
                     : Image.asset(
@@ -64,9 +64,9 @@ class RecipeCard extends StatelessWidget {
                 ),
               ),
               Positioned(
-                bottom: 12, 
-                left: 12, 
-                right: 12, 
+                bottom: 12,
+                left: 12,
+                right: 12,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -80,12 +80,12 @@ class RecipeCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6), 
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
                           Icons.access_time,
-                          size: 16, 
+                          size: 16,
                           color: AppColors.paleGray,
                         ),
                         const SizedBox(width: 4),
@@ -93,14 +93,24 @@ class RecipeCard extends StatelessWidget {
                           '${recipe.cookingTime} min',
                           style: TextStyle(
                             color: AppColors.paleGray,
-                            fontSize: 12, 
+                            fontSize: 12,
                           ),
                         ),
-                        const SizedBox(width: 10), 
+                        const SizedBox(width: 10),
                         Icon(Icons.people, size: 16, color: AppColors.paleGray),
                         const SizedBox(width: 4),
                         Text(
                           '${recipe.servings} servings',
+                          style: TextStyle(
+                            color: AppColors.paleGray,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Icon(Icons.favorite, size: 16, color: AppColors.paleGray),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${recipe.likesCount} likes', 
                           style: TextStyle(
                             color: AppColors.paleGray,
                             fontSize: 12,
@@ -112,9 +122,9 @@ class RecipeCard extends StatelessWidget {
                 ),
               ),
               Positioned(
-                top: 12, 
-                right: 12, 
-                child: Icon(Icons.arrow_forward, size: 24, color: Colors.white), 
+                top: 12,
+                right: 12,
+                child: Icon(Icons.arrow_forward, size: 24, color: Colors.white),
               ),
             ],
           ),
@@ -123,5 +133,3 @@ class RecipeCard extends StatelessWidget {
     );
   }
 }
-// A SM FAJN NAREDU FANTA A
-//- MIHA

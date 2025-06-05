@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
-import 'package:dish_dash/components/recipe_card.dart'; 
+import 'package:dish_dash/components/recipe_card.dart';
 
 class HomeContentScreen extends StatefulWidget {
   const HomeContentScreen({super.key});
@@ -31,7 +31,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
 
     try {
       final List<dynamic> data = await supabase.rpc(
-        'get_recommended_recipes_random',
+        'get_recommended_recipes_random_likes', 
         params: {'num_recipes': 15},
       );
 
@@ -48,13 +48,13 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
         _errorMessage = 'Napaka pri nalaganju priporočenih receptov: ${e.message}';
         _isLoading = false;
       });
-      print('Supabase Error: ${e.message}');
+      print('Supabase Error in _fetchRecommendedRecipes: ${e.message}');
     } catch (e) {
       setState(() {
         _errorMessage = 'Prišlo je do nepričakovanih napake pri nalaganju priporočenih receptov: $e';
         _isLoading = false;
       });
-      print('General Error: $e');
+      print('General Error in _fetchRecommendedRecipes: $e');
     }
   }
 
@@ -88,10 +88,11 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                         itemCount: _recommendedRecipes.length,
                         itemBuilder: (context, index) {
                           final recipe = _recommendedRecipes[index];
-                          return RecipeCard(recipe: recipe); 
+                          return RecipeCard(recipe: recipe);
                         },
                       ),
                     ),
     );
   }
 }
+//OPA

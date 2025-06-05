@@ -3,11 +3,12 @@ class Recipe {
   final String name;
   final String imageUrl;
   final String description;
-  final String cookingTime; 
-  final String servings;    
-  final String category;   
+  final String cookingTime;
+  final String servings;
+  final String category;
   final List<String> ingredients;
   final List<String> instructions;
+  final int likesCount; 
 
   Recipe({
     required this.id,
@@ -16,9 +17,10 @@ class Recipe {
     required this.description,
     required this.cookingTime,
     required this.servings,
-    required this.category, 
+    required this.category,
     required this.ingredients,
     required this.instructions,
+    this.likesCount = 0, 
   });
 
   factory Recipe.fromMap(Map<String, dynamic> map) {
@@ -29,11 +31,10 @@ class Recipe {
       description: map['description'] as String? ?? 'Ni opisa.',
       cookingTime: map['cooking_time'] as String? ?? 'Neznano',
       servings: map['servings'] as String? ?? 'Neznano',
-      category: map['category'] as String? ?? 'Neznano', 
+      category: map['category'] as String? ?? 'Neznano',
       ingredients: List<String>.from(map['ingredients'] as List? ?? []),
       instructions: List<String>.from(map['instructions'] as List? ?? []),
+      likesCount: (map['likes_count'] as int?) ?? 0, 
     );
   }
 }
-
-
