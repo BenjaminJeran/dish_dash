@@ -23,7 +23,6 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
 
   final TextEditingController _searchController = TextEditingController();
 
-  // UPDATED CATEGORIES TO MATCH YOUR CREATE SCREEN
   final List<Map<String, String>> _categories = [
     {'name': 'Zajtrk', 'image': 'assets/logo.png'},
     {'name': 'Kosilo', 'image': 'assets/logo.png'},
@@ -52,21 +51,21 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
     });
 
     try {
-      var query = supabase.from('recipes').select();
+      final Map<String, dynamic> rpcParams = {
+        'search_query': _searchQuery.isNotEmpty ? _searchQuery : null,
+        'category_filter': _selectedCategory,
+      };
 
-      if (_searchQuery.isNotEmpty) {
-        // Using `ilike` for case-insensitive search
-        query = query.ilike('name', '%$_searchQuery%');
-      }
+      final List<dynamic> data = await supabase.rpc(
+        'get_filtered_recipes_with_likes', 
+        params: rpcParams,
+      );
 
-      if (_selectedCategory != null) {
-        query = query.eq('category', _selectedCategory!);
-      }
-
-      final List<Map<String, dynamic>> data = await query;
+      final List<Map<String, dynamic>> recipeMaps =
+          List<Map<String, dynamic>>.from(data);
 
       setState(() {
-        _filteredRecipes = data.map((map) => Recipe.fromMap(map)).toList();
+        _filteredRecipes = recipeMaps.map((map) => Recipe.fromMap(map)).toList();
         _isLoading = false;
       });
     } on PostgrestException catch (e) {
@@ -74,13 +73,13 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
         _errorMessage = 'Napaka pri nalaganju receptov: ${e.message}';
         _isLoading = false;
       });
-      print('Supabase Error: ${e.message}');
+      print('Supabase Error in _fetchFilteredRecipes: ${e.message}');
     } catch (e) {
       setState(() {
         _errorMessage = 'Prišlo je do nepričakovanih napake pri nalaganju receptov: $e';
         _isLoading = false;
       });
-      print('General Error: $e');
+      print('General Error in _fetchFilteredRecipes: $e');
     }
   }
 
@@ -88,12 +87,12 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
     setState(() {
       _searchQuery = query;
     });
+
     _fetchFilteredRecipes();
   }
 
   void _onCategorySelected(String categoryName) {
     setState(() {
-      // Toggle category selection
       _selectedCategory = categoryName == _selectedCategory ? null : categoryName;
     });
     _fetchFilteredRecipes();
@@ -236,7 +235,6 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
                               itemCount: _filteredRecipes.length,
                               itemBuilder: (context, index) {
                                 final recipe = _filteredRecipes[index];
-                                // Use the reusable RecipeCard component here
                                 return RecipeCard(recipe: recipe);
                               },
                             ),
