@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:dish_dash/pages/explore/home_content_screen.dart';
 import 'package:dish_dash/pages/explore/explore_content_screen.dart';
 import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
 import 'package:dish_dash/pages/recipes/create_recipe_screen.dart';
@@ -22,14 +21,12 @@ class MainTabScreen extends StatefulWidget {
 }
 
 class _MainTabScreenState extends State<MainTabScreen> {
-  int _selectedIndex = 0; // Index for the selected tab
+  int _selectedIndex = 0; 
 
-  // Add CookingChallengeScreen to the list of widgets
   static const List<Widget> _widgetOptions = <Widget>[
-    HomeContentScreen(),
     ExploreContentScreen(),
     RecipesContentScreen(),
-    CookingChallengeScreen(), // <--- ADD THIS
+    CookingChallengeScreen(), 
   ];
 
   void _onItemTapped(int index) {
@@ -120,13 +117,11 @@ class _MainTabScreenState extends State<MainTabScreen> {
                 ),
               },
             ),
-            // You could also add a dedicated challenges entry here if you prefer
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('LogOut'),
               onTap: () async {
                 try {
-                  // --- SUPABASE LOGOUT CALL ---
                   await Supabase.instance.client.auth.signOut();
 
                   if (mounted) {
@@ -172,10 +167,10 @@ class _MainTabScreenState extends State<MainTabScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            _buildNavItem(0, Icons.home, 'Home'),
-            _buildNavItem(1, Icons.search, 'Explore'),
-            _buildNavItem(2, Icons.menu_book, 'Recipes'),
-            _buildNavItem(3, Icons.stars, 'Challenges'), // <--- ADD THIS NEW NAV ITEM
+            //_buildNavItem(0, Icons.home, 'Home'),
+            _buildNavItem(0, Icons.search, 'Explore'),
+            _buildNavItem(1, Icons.menu_book, 'Recipes'),
+            _buildNavItem(2, Icons.stars, 'Challenges'),
           ],
         ),
       ),

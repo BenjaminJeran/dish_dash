@@ -1,9 +1,8 @@
-// lib/pages/explore/explore_content_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
-import 'package:dish_dash/components/recipe_card.dart'; // Import the new RecipeCard component
+import 'package:dish_dash/components/recipe_card.dart';
 
 class ExploreContentScreen extends StatefulWidget {
   const ExploreContentScreen({super.key});
@@ -35,7 +34,7 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchFilteredRecipes();
+    _fetchFilteredRecipes(); 
   }
 
   @override
@@ -51,15 +50,25 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
     });
 
     try {
-      final Map<String, dynamic> rpcParams = {
-        'search_query': _searchQuery.isNotEmpty ? _searchQuery : null,
-        'category_filter': _selectedCategory,
-      };
+      List<dynamic> data;
 
-      final List<dynamic> data = await supabase.rpc(
-        'get_filtered_recipes_with_likes', 
-        params: rpcParams,
-      );
+      if (_searchQuery.isEmpty && _selectedCategory == null) {
+        data = await supabase.rpc(
+          'get_recommended_recipes_random_likes',
+          params: {'num_recipes': 15}, 
+        );
+      } else {
+        
+        final Map<String, dynamic> rpcParams = {
+          'search_query': _searchQuery.isNotEmpty ? _searchQuery : null,
+          'category_filter': _selectedCategory,
+        };
+
+        data = await supabase.rpc(
+          'get_filtered_recipes_with_likes',
+          params: rpcParams,
+        );
+      }
 
       final List<Map<String, dynamic>> recipeMaps =
           List<Map<String, dynamic>>.from(data);
@@ -87,7 +96,6 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
     setState(() {
       _searchQuery = query;
     });
-
     _fetchFilteredRecipes();
   }
 
@@ -96,6 +104,18 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
       _selectedCategory = categoryName == _selectedCategory ? null : categoryName;
     });
     _fetchFilteredRecipes();
+  }
+
+  String _getRecipesListTitle() {
+    if (_searchQuery.isNotEmpty && _selectedCategory != null) {
+      return 'Rezultati iskanja in kategorije "${_selectedCategory!}"';
+    } else if (_searchQuery.isNotEmpty) {
+      return 'Rezultati iskanja';
+    } else if (_selectedCategory != null) {
+      return 'Recepti v kategoriji "${_selectedCategory!}"';
+    } else {
+      return 'Priporočeni recepti'; 
+    }
   }
 
   @override
@@ -186,8 +206,16 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Text(
+                  _getRecipesListTitle(),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.charcoal,
+                  ),
+                ),
                 if (_searchQuery.isNotEmpty || _selectedCategory != null)
                   TextButton(
                     onPressed: () {
@@ -223,7 +251,9 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
                     : _filteredRecipes.isEmpty
                         ? Center(
                             child: Text(
-                              'Ni najdenih receptov za izbrane filtre.',
+                              _searchQuery.isEmpty && _selectedCategory == null
+                                  ? 'Trenutno ni na voljo nobenih priporočenih receptov.'
+                                  : 'Ni najdenih receptov za izbrane filtre.',
                               style: TextStyle(fontSize: 18, color: AppColors.dimGray),
                               textAlign: TextAlign.center,
                             ),
