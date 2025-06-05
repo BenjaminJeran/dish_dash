@@ -1,3 +1,4 @@
+import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -13,6 +14,12 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final _passwordController = TextEditingController();
   bool _isSubmitting = false;
 
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _updatePassword() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -23,30 +30,37 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         UserAttributes(password: _passwordController.text),
       );
 
-      setState(() => _isSubmitting = false);
-
-      if (response.user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Geslo uspešno posodobljeno.')),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Neznana napaka pri posodabljanju gesla.')),
-        );
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        
+        if (response.user != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Geslo uspešno posodobljeno.')),
+          );
+           Navigator.pushReplacement(
+             context,
+             MaterialPageRoute(builder: (context) => const LoginScreen()),
+           );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Neznana napaka pri posodabljanju gesla.')),
+          );
+        }
       }
     } catch (e) {
-      setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Napaka: ${e.toString()}')),
-      );
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Napaka: ${e.toString()}')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nova Gesla')),
+      appBar: AppBar(title: const Text('Novo Geslo')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -73,10 +87,12 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _updatePassword,
-                child: const Text('Posodobi geslo'),
-              ),
+              _isSubmitting
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _updatePassword,
+                      child: const Text('Posodobi geslo'),
+                    ),
             ],
           ),
         ),
