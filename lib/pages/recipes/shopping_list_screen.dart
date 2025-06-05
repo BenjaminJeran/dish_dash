@@ -1,9 +1,9 @@
 // lib/pages/shopping_list_screen.dart
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/colors/app_colors.dart';
-import 'package:dish_dash/models/shopping_list_item.dart'; // Import your updated model
+import 'package:dish_dash/models/shopping_list_item.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   const ShoppingListScreen({super.key});
@@ -26,12 +26,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   Future<void> _addItem() async {
     final newItemName = _newItemController.text.trim();
-    // Ensure userId is not null before proceeding with database operations
     if (userId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please log in to add items to your list.'),
+            content: Text(
+              'Prosimo, prijavite se, da dodate elemente na seznam.',
+            ),
           ),
         );
       }
@@ -49,7 +50,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             .eq('name', newItemName)
             .limit(1);
 
-        // Ce obstaja že element z istim imenom, povečaj količino
         if (existingItems.isNotEmpty) {
           final existingItemData = existingItems.first;
           final currentQuantity = existingItemData['quantity'] as int;
@@ -59,7 +59,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               .eq('id', existingItemData['id'])
               .eq('user_id', currentUserId);
         } else {
-          // Dodaj nov element
           final newItem = ShoppingListItem(name: newItemName);
           await _supabase.from('shopping_items').insert({
             'user_id': currentUserId,
@@ -71,11 +70,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         _newItemController.clear();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error adding item: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Napaka pri dodajanju elementa: $e')),
+          );
         }
-        print('Error adding item: $e');
+        print('Napaka pri dodajanju elementa: $e');
       }
     }
   }
@@ -89,7 +88,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Deleting item...'),
+            content: Text('Brišem element...'),
             duration: Duration(seconds: 1),
           ),
         );
@@ -101,22 +100,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           .eq('id', itemId)
           .eq('user_id', currentUserId);
 
-      // Optional: Show success message
       if (mounted) {
         _refreshList();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error deleting item: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Napaka pri brisanju elementa: $e')),
+        );
       }
-      print('Error deleting item: $e');
+      print('Napaka pri brisanju elementa: $e');
     }
   }
 
   Future<void> _refreshList() async {
-    // Forcammo rebuild streambuilderja - ni šlo drgač za delete
     setState(() {});
   }
 
@@ -134,10 +131,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error incrementing quantity: $e')),
+          SnackBar(content: Text('Napaka pri povečevanju količine: $e')),
         );
       }
-      print('Error incrementing quantity: $e');
+      print('Napaka pri povečevanju količine: $e');
     }
   }
 
@@ -159,10 +156,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error decrementing quantity: $e')),
+          SnackBar(content: Text('Napaka pri zmanjševanju količine: $e')),
         );
       }
-      print('Error decrementing quantity: $e');
+      print('Napaka pri zmanjševanju količine: $e');
     }
   }
 
@@ -180,10 +177,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error toggling checked status: $e')),
+          SnackBar(content: Text('Napaka pri spreminjanju statusa: $e')),
         );
       }
-      print('Error toggling checked status: $e');
+      print('Napaka pri spreminjanju statusa: $e');
     }
   }
 
@@ -276,7 +273,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   currentUserId == null
                       ? const Center(
                         child: Text(
-                          'Please log in to view your shopping list.',
+                          'Prosimo, prijavite se, da si ogledate svoj nakupovalni seznam.',
                         ),
                       )
                       : StreamBuilder<List<Map<String, dynamic>>>(
@@ -291,10 +288,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text('Error: ${snapshot.error}'),
+                                  Text('Napaka: ${snapshot.error}'),
                                   ElevatedButton(
                                     onPressed: _refreshList,
-                                    child: const Text('Retry'),
+                                    child: const Text('Poskusi znova'),
                                   ),
                                 ],
                               ),
@@ -322,11 +319,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Text('Your shopping list is empty!'),
+                                  const Text(
+                                    'Vaš nakupovalni seznam je prazen!',
+                                  ),
                                   const SizedBox(height: 10),
                                   ElevatedButton(
                                     onPressed: _refreshList,
-                                    child: const Text('Refresh'),
+                                    child: const Text('Osveži'),
                                   ),
                                 ],
                               ),
@@ -440,7 +439,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  print('Share list pressed');
+                  print('Deli seznam pritisnjen');
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

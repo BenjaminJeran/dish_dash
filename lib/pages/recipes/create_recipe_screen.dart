@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dish_dash/helpers/toast_manager.dart';
 
 class CreateRecipeScreen extends StatefulWidget {
   const CreateRecipeScreen({super.key});
@@ -31,6 +31,18 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     'Sladica',
     'Prigrizek',
     'Drugo',
+  ];
+
+  String? _selectedCuisine;
+  final List<String> _cuisines = [
+    'Italijanska',
+    'Azijska',
+    'Indijska',
+    'Francoska',
+    'Mehiška',
+    'Sredozemska',
+    'Ameriška',
+    'Bližnjevzhodna',
   ];
 
   XFile? _selectedImage;
@@ -84,19 +96,19 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   _getImage(ImageSource.camera);
                 },
               ),
-
               if (_selectedImage != null)
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
-                  title: const Text('Odstrani sliko', style: TextStyle(color: Colors.red)),
+                  title: const Text(
+                    'Odstrani sliko',
+                    style: TextStyle(color: Colors.red),
+                  ),
                   onTap: () {
                     setState(() {
                       _selectedImage = null;
                     });
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Slika odstranjena.')),
-                    );
+                    ToastManager.showInfoToast(context, 'Slika odstranjena.');
                   },
                 ),
             ],
@@ -131,31 +143,26 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
           );
 
-      final String imageUrl =
-          supabase.storage.from('recipe-images').getPublicUrl(fileName);
+      final String imageUrl = supabase.storage
+          .from('recipe-images')
+          .getPublicUrl(fileName);
 
       return imageUrl;
     } on StorageException catch (e) {
       print('Supabase Storage Error: ${e.message}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Napaka pri nalaganju slike: ${e.message}',
-            ),
-          ),
+        ToastManager.showErrorToast(
+          context,
+          'Napaka pri nalaganju slike: ${e.message}',
         );
       }
       return null;
     } catch (e) {
       print('General Image Upload Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Nepričakovana napaka pri nalaganju slike.',
-            ),
-          ),
+        ToastManager.showErrorToast(
+          context,
+          'Nepričakovana napaka pri nalaganju slike.',
         );
       }
       return null;
@@ -204,15 +211,17 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     final recipeName = _recipeNameController.text.trim();
     final description = _descriptionController.text.trim();
 
-    final ingredientsList = _ingredientControllers
-        .map((controller) => controller.text.trim())
-        .where((text) => text.isNotEmpty)
-        .toList();
+    final ingredientsList =
+        _ingredientControllers
+            .map((controller) => controller.text.trim())
+            .where((text) => text.isNotEmpty)
+            .toList();
 
-    final instructionsList = _instructionControllers
-        .map((controller) => controller.text.trim())
-        .where((text) => text.isNotEmpty)
-        .toList();
+    final instructionsList =
+        _instructionControllers
+            .map((controller) => controller.text.trim())
+            .where((text) => text.isNotEmpty)
+            .toList();
 
     final cookingTime = _cookingTimeController.text.trim();
     final servings = _servingsController.text.trim();
@@ -225,13 +234,12 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         instructionsList.isEmpty ||
         cookingTime.isEmpty ||
         servings.isEmpty ||
-        category == null) {
+        category == null ||
+        _selectedCuisine == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Prosim izpolnite vsa obvezna polja (ime, opis, sestavine, navodila, čas, porcije, kategorija).'),
-          ),
+        ToastManager.showErrorToast(
+          context,
+          'Prosim izpolnite vsa obvezna polja (ime, opis, sestavine, navodila, čas, porcije, kategorija, kuhinja).',
         );
       }
       setState(() {
@@ -242,12 +250,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
     if (userId == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Uporabnik ni prijavljen. Prosim prijavite se.',
-            ),
-          ),
+        ToastManager.showErrorToast(
+          context,
+          'Uporabnik ni prijavljen. Prosim prijavite se.',
         );
       }
       setState(() {
@@ -270,11 +275,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       } catch (e) {
         print('Error during image upload: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Napaka pri nalaganju slike.'),
-            ),
-          );
+          ToastManager.showErrorToast(context, 'Napaka pri nalaganju slike.');
         }
         setState(() {
           _isLoading = false;
@@ -291,6 +292,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       'cooking_time': cookingTime,
       'servings': servings,
       'category': category,
+      'cuisine': _selectedCuisine,
       'user_id': userId,
       'created_at': DateTime.now().toIso8601String(),
     };
@@ -310,18 +312,15 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       print('   Cooking Time: $cookingTime');
       print('   Servings: $servings');
       print('   Category: $category');
-      print('   Image URL: ${imageUrl ?? 'No image selected, using default if set in DB'}'); // Clarified print message
+      print(
+        '   Image URL: ${imageUrl ?? 'No image selected, using default if set in DB'}',
+      );
       print('   User ID: $userId');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Recept uspešno dodan!'),
-          ),
-        );
+        ToastManager.showSuccessToast(context, 'Recept uspešno dodan!');
       }
 
-     
       _recipeNameController.clear();
       _descriptionController.clear();
       _cookingTimeController.clear();
@@ -341,28 +340,23 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
       setState(() {
         _selectedCategory = null;
-        _selectedImage = null; 
+        _selectedCuisine = null;
+        _selectedImage = null;
       });
     } on PostgrestException catch (e) {
       print('Supabase Database Error: ${e.message}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Napaka pri shranjevanju recepta: ${e.message}',
-            ),
-          ),
+        ToastManager.showErrorToast(
+          context,
+          'Napaka pri shranjevanju recepta: ${e.message}',
         );
       }
     } catch (e) {
       print('General Recipe Save Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Nepričakovana napaka pri shranjevanju recepta.',
-            ),
-          ),
+        ToastManager.showErrorToast(
+          context,
+          'Nepričakovana napaka pri shranjevanju recepta.',
         );
       }
     } finally {
@@ -391,9 +385,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         minLines: minLines,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(
-            color: AppColors.dimGray,
-          ),
+          hintStyle: TextStyle(color: AppColors.dimGray),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 15,
@@ -442,14 +434,12 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               ),
             ),
             const SizedBox(height: 30),
-
             _buildInputField(
               controller: _recipeNameController,
               hintText: 'Ime recepta',
               keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 20),
-
             _buildInputField(
               controller: _descriptionController,
               hintText: 'Kratek opis recepta',
@@ -458,7 +448,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               minLines: 3,
             ),
             const SizedBox(height: 20),
-
             Text(
               'Sestavine',
               style: TextStyle(
@@ -469,42 +458,45 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 10),
             Column(
-              children: _ingredientControllers.asMap().entries.map((entry) {
-                int idx = entry.key;
-                TextEditingController controller = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildInputField(
-                          controller: controller,
-                          hintText: 'Sestavina ${idx + 1}',
-                          keyboardType: TextInputType.text,
-                        ),
+              children:
+                  _ingredientControllers.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    TextEditingController controller = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildInputField(
+                              controller: controller,
+                              hintText: 'Sestavina ${idx + 1}',
+                              keyboardType: TextInputType.text,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.remove_circle_outline,
+                              color: AppColors.tomatoRed,
+                            ),
+                            onPressed: () => _removeIngredientField(idx),
+                          ),
+                        ],
                       ),
-                      if (_ingredientControllers.length > 1 || controller.text.isNotEmpty) 
-                        IconButton(
-                          icon: Icon(Icons.remove_circle_outline,
-                              color: AppColors.tomatoRed),
-                          onPressed: () => _removeIngredientField(idx),
-                        ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: _addIngredientField,
                 icon: Icon(Icons.add, color: AppColors.leafGreen),
-                label: Text('Dodaj sestavino',
-                    style: TextStyle(color: AppColors.leafGreen)),
+                label: Text(
+                  'Dodaj sestavino',
+                  style: TextStyle(color: AppColors.leafGreen),
+                ),
               ),
             ),
             const SizedBox(height: 20),
-
             Text(
               'Navodila za pripravo',
               style: TextStyle(
@@ -515,44 +507,47 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 10),
             Column(
-              children: _instructionControllers.asMap().entries.map((entry) {
-                int idx = entry.key;
-                TextEditingController controller = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildInputField(
-                          controller: controller,
-                          hintText: 'Korak ${idx + 1}',
-                          keyboardType: TextInputType.multiline,
-                          maxLines: null,
-                          minLines: 1,
-                        ),
+              children:
+                  _instructionControllers.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    TextEditingController controller = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildInputField(
+                              controller: controller,
+                              hintText: 'Korak ${idx + 1}',
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                              minLines: 1,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.remove_circle_outline,
+                              color: AppColors.tomatoRed,
+                            ),
+                            onPressed: () => _removeInstructionField(idx),
+                          ),
+                        ],
                       ),
-                      if (_instructionControllers.length > 1 || controller.text.isNotEmpty)
-                        IconButton(
-                          icon: Icon(Icons.remove_circle_outline,
-                              color: AppColors.tomatoRed),
-                          onPressed: () => _removeInstructionField(idx),
-                        ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: _addInstructionField,
                 icon: Icon(Icons.add, color: AppColors.leafGreen),
-                label: Text('Dodaj korak',
-                    style: TextStyle(color: AppColors.leafGreen)),
+                label: Text(
+                  'Dodaj korak',
+                  style: TextStyle(color: AppColors.leafGreen),
+                ),
               ),
             ),
             const SizedBox(height: 20),
-
             Row(
               children: [
                 Expanded(
@@ -575,70 +570,117 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               ],
             ),
             const SizedBox(height: 20),
-
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  flex: 3,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.paleGray,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedCategory,
-                        hint: Text(
-                          'Kategorija',
-                          style: TextStyle(color: AppColors.dimGray),
+                  flex: 2,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
                         ),
-                        icon: Icon(
-                          Icons.keyboard_arrow_down,
-                          color: AppColors.dimGray,
+                        decoration: BoxDecoration(
+                          color: AppColors.paleGray,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        isExpanded: true,
-                        style: TextStyle(
-                          color: AppColors.charcoal,
-                          fontSize: 16,
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedCuisine,
+                            hint: Text(
+                              'Kuhinja',
+                              style: TextStyle(color: AppColors.dimGray),
+                            ),
+                            icon: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: AppColors.dimGray,
+                            ),
+                            isExpanded: true,
+                            style: TextStyle(
+                              color: AppColors.charcoal,
+                              fontSize: 16,
+                            ),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedCuisine = newValue;
+                              });
+                            },
+                            items:
+                                _cuisines.map<DropdownMenuItem<String>>((
+                                  String value,
+                                ) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                          ),
                         ),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedCategory = newValue;
-                          });
-                        },
-                        items: _categories.map<DropdownMenuItem<String>>(
-                          (
-                            String value,
-                          ) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          },
-                        ).toList(),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.paleGray,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedCategory,
+                            hint: Text(
+                              'Kategorija',
+                              style: TextStyle(color: AppColors.dimGray),
+                            ),
+                            icon: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: AppColors.dimGray,
+                            ),
+                            isExpanded: true,
+                            style: TextStyle(
+                              color: AppColors.charcoal,
+                              fontSize: 16,
+                            ),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedCategory = newValue;
+                              });
+                            },
+                            items:
+                                _categories.map<DropdownMenuItem<String>>((
+                                  String value,
+                                ) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: ElevatedButton.icon(
                     onPressed: _pickImage,
-                    icon: Icon(
-                      Icons.upload_file,
-                      color: AppColors.charcoal,
-                    ),
+                    icon: Icon(Icons.upload_file, color: AppColors.charcoal),
                     label: Text(
                       _selectedImage != null
                           ? 'Slika izbrana!'
                           : 'Dodaj sliko (neobvezno)',
-                      style: TextStyle(color: AppColors.charcoal, fontSize: _selectedImage != null ? 12 : 14),
+                      style: TextStyle(
+                        color: AppColors.charcoal,
+                        fontSize: _selectedImage != null ? 12 : 14,
+                      ),
                       overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.paleGray,
@@ -652,47 +694,41 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 ),
               ],
             ),
-            
             if (_selectedImage != null)
               Padding(
-                padding: const EdgeInsets.only(top: 10.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.file(
-                    File(
-                      _selectedImage!.path,
+                padding: const EdgeInsets.only(top: 20.0),
+                child: Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      File(_selectedImage!.path),
+                      height: 150,
+                      width: 150,
+                      fit: BoxFit.cover,
                     ),
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
                   ),
                 ),
               ),
             const SizedBox(height: 30),
-
             ElevatedButton(
               onPressed: _isLoading ? null : _addRecipe,
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(
-                  double.infinity,
-                  50,
-                ),
+                minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: _isLoading
-                  ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    )
-                  : const Text(
-                      'Dodaj recept',
-                      style: TextStyle(
-                        color: AppColors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+              child:
+                  _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                        'Dodaj recept',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
             ),
           ],
         ),
