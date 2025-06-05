@@ -160,7 +160,6 @@ class _MainTabScreenState extends State<MainTabScreen> {
           ],
         ),
       ),
-      // Use a Stack to position the FloatingActionButton
       bottomNavigationBar: BottomAppBar(
         color: AppColors.white,
         surfaceTintColor: AppColors.white,
@@ -180,12 +179,11 @@ class _MainTabScreenState extends State<MainTabScreen> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
           bottom: 50.0,
-        ), // Adjust this value as needed
+        ), 
         child: SizedBox(
-          // Wrap the FloatingActionButton with SizedBox
           width:
-              70.0, // Set your desired width (e.g., 70.0 for a larger button)
-          height: 70.0, // Set your desired height (e.g., 70.0)
+              70.0, 
+          height: 70.0, 
           child: FloatingActionButton(
             onPressed: () {
               Navigator.push(
@@ -201,7 +199,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
               Icons.add,
               color: AppColors.white,
               size: 35.0,
-            ), // Adjust icon size to fit the larger button
+            ), 
           ),
         ),
       ),
