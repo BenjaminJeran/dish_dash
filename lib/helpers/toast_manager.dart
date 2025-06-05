@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dish_dash/components/toast_notification.dart';
+import 'package:dish_dash/components/animated_toast_notification.dart';
 
 class ToastManager {
   static OverlayEntry? _currentOverlayEntry;
@@ -23,12 +23,13 @@ class ToastManager {
     dismissToast();
 
     _currentOverlayEntry = OverlayEntry(
-      builder: (context) => ToastNotification(
-        message: message,
-        icon: icon,
-        backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
-        textColor: textColor ?? Colors.white,
-      ),
+      builder:
+          (context) => AnimatedToastNotification(
+            message: message,
+            icon: icon,
+            backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
+            textColor: textColor ?? Colors.white,
+          ),
     );
 
     Overlay.of(context).insert(_currentOverlayEntry!);
@@ -40,37 +41,58 @@ class ToastManager {
   }
 
   /// Shows a success toast.
-  static void showSuccessToast(BuildContext context, String message, {Duration duration = const Duration(seconds: 3)}) {
+  static void showSuccessToast(
+    BuildContext context,
+    String message, {
+    Duration duration = const Duration(seconds: 3),
+  }) {
     showToast(
       context,
       message: message,
       icon: Icons.check_circle_outline,
-      backgroundColor: ToastNotification.success('').backgroundColor, // Use factory color
-      textColor: ToastNotification.success('').textColor,
+      backgroundColor:
+          AnimatedToastNotification.success(
+            '',
+          ).backgroundColor, // Use factory color
+      textColor: AnimatedToastNotification.success('').textColor,
       duration: duration,
     );
   }
 
   /// Shows an error toast.
-  static void showErrorToast(BuildContext context, String message, {Duration duration = const Duration(seconds: 4)}) {
+  static void showErrorToast(
+    BuildContext context,
+    String message, {
+    Duration duration = const Duration(seconds: 4),
+  }) {
     showToast(
       context,
       message: message,
       icon: Icons.error_outline,
-      backgroundColor: ToastNotification.error('').backgroundColor, // Use factory color
-      textColor: ToastNotification.error('').textColor,
+      backgroundColor:
+          AnimatedToastNotification.error(
+            '',
+          ).backgroundColor, // Use factory color
+      textColor: AnimatedToastNotification.error('').textColor,
       duration: duration,
     );
   }
 
   /// Shows an info toast.
-  static void showInfoToast(BuildContext context, String message, {Duration duration = const Duration(seconds: 3)}) {
+  static void showInfoToast(
+    BuildContext context,
+    String message, {
+    Duration duration = const Duration(seconds: 3),
+  }) {
     showToast(
       context,
       message: message,
       icon: Icons.info_outline,
-      backgroundColor: ToastNotification.info('').backgroundColor, // Use factory color
-      textColor: ToastNotification.info('').textColor,
+      backgroundColor:
+          AnimatedToastNotification.info(
+            '',
+          ).backgroundColor, // Use factory color
+      textColor: AnimatedToastNotification.info('').textColor,
       duration: duration,
     );
   }
