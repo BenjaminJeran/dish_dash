@@ -97,7 +97,6 @@ class ToastManager {
     );
   }
 
-  /// Dismisses the currently visible toast, if any.
   static void dismissToast() {
     if (_currentOverlayEntry != null && _currentOverlayEntry!.mounted) {
       _currentOverlayEntry?.remove();

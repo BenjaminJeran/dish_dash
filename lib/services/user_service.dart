@@ -38,26 +38,30 @@ class UserService {
   }
 
   Future<Map<String, dynamic>?> getUserPreferences() async {
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = _supabase.auth.currentUser;
     if (user == null) return null;
 
-    final response =
-        await Supabase.instance.client
-            .from('users')
-            .select('preferences')
-            .eq('id', user.id)
-            .single();
+    final response = await _supabase
+        .from('users')
+        .select('preferences')
+        .eq('id', user.id)
+        .single();
 
     return response['preferences'] ?? {};
   }
 
   Future<void> updateUserPreferences(Map<String, dynamic> preferences) async {
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    await Supabase.instance.client
+    // Keep only the "cuisine" key
+    final cleanedPreferences = {
+      'cuisine': preferences['cuisine'] ?? [],
+    };
+
+    await _supabase
         .from('users')
-        .update({'preferences': preferences})
+        .update({'preferences': cleanedPreferences})
         .eq('id', user.id);
   }
 }

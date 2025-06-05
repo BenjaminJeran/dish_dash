@@ -4,10 +4,11 @@ import 'dart:io';
 
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:dish_dash/models/recipe.dart'; 
+import 'package:dish_dash/models/recipe.dart';
+import 'package:dish_dash/helpers/toast_manager.dart';
 
 class UpdateRecipeScreen extends StatefulWidget {
-  final Recipe recipe; 
+  final Recipe recipe;
 
   const UpdateRecipeScreen({super.key, required this.recipe});
 
@@ -26,7 +27,7 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
   final List<TextEditingController> _ingredientControllers = [];
   final List<TextEditingController> _instructionControllers = [];
 
-  String? _selectedCategory; 
+  String? _selectedCategory;
   final List<String> _categories = [
     'Zajtrk',
     'Kosilo',
@@ -36,21 +37,36 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
     'Drugo',
   ];
 
-  XFile? _selectedImage; 
-  String? _currentImageUrl;
-  bool _isImageRemoved = false; 
+  String? _selectedCuisine;
+  final List<String> _cuisines = [
+    'Italijanska',
+    'Azijska',
+    'Indijska',
+    'Francoska',
+    'Mehiška',
+    'Sredozemska',
+    'Ameriška',
+    'Bližnjevzhodna',
+  ];
 
-  bool _isLoading = false; 
+  XFile? _selectedImage;
+  String? _currentImageUrl;
+  bool _isImageRemoved = false;
+
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
 
     _recipeNameController = TextEditingController(text: widget.recipe.name);
-    _descriptionController = TextEditingController(text: widget.recipe.description);
-    _cookingTimeController = TextEditingController(text: widget.recipe.cookingTime);
+    _descriptionController = TextEditingController(
+      text: widget.recipe.description,
+    );
+    _cookingTimeController = TextEditingController(
+      text: widget.recipe.cookingTime,
+    );
     _servingsController = TextEditingController(text: widget.recipe.servings);
-
 
     if (widget.recipe.ingredients.isNotEmpty) {
       for (var ingredient in widget.recipe.ingredients) {
@@ -69,7 +85,9 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
     }
 
     _selectedCategory = widget.recipe.category;
-    _currentImageUrl = widget.recipe.imageUrl.isNotEmpty ? widget.recipe.imageUrl : null;
+    _selectedCuisine = widget.recipe.cuisine;
+    _currentImageUrl =
+        widget.recipe.imageUrl.isNotEmpty ? widget.recipe.imageUrl : null;
   }
 
   @override
@@ -113,21 +131,21 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
                   _getImage(ImageSource.camera);
                 },
               ),
-        
               if (_selectedImage != null || _currentImageUrl != null)
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
-                  title: const Text('Odstrani sliko', style: TextStyle(color: Colors.red)),
+                  title: const Text(
+                    'Odstrani sliko',
+                    style: TextStyle(color: Colors.red),
+                  ),
                   onTap: () {
                     setState(() {
-                      _selectedImage = null; 
+                      _selectedImage = null;
                       _currentImageUrl = null;
-                      _isImageRemoved = true; 
+                      _isImageRemoved = true;
                     });
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Slika odstranjena.')),
-                    );
+                    ToastManager.showInfoToast(context, 'Slika odstranjena.'); 
                   },
                 ),
             ],
@@ -143,13 +161,12 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
 
     if (image != null) {
       setState(() {
-        _selectedImage = image; 
-        _isImageRemoved = false; 
+        _selectedImage = image;
+        _isImageRemoved = false;
       });
       print('Image selected: ${image.path}');
     }
   }
-
 
   Future<String?> _uploadImageToSupabaseStorage(XFile imageFile) async {
     try {
@@ -171,25 +188,15 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
     } on StorageException catch (e) {
       print('Supabase Storage Error: ${e.message}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Napaka pri nalaganju slike: ${e.message}',
-            ),
-          ),
-        );
+        ToastManager.showErrorToast(
+            context, 'Napaka pri nalaganju slike: ${e.message}');
       }
       return null;
     } catch (e) {
       print('General Image Upload Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Nepričakovana napaka pri nalaganju slike.',
-            ),
-          ),
-        );
+        ToastManager.showErrorToast(context,
+            'Nepričakovana napaka pri nalaganju slike.');
       }
       return null;
     }
@@ -250,6 +257,7 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
     final cookingTime = _cookingTimeController.text.trim();
     final servings = _servingsController.text.trim();
     final category = _selectedCategory;
+    final cuisine = _selectedCuisine;
     final userId = supabase.auth.currentUser?.id;
 
     if (recipeName.isEmpty ||
@@ -258,14 +266,11 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
         instructionsList.isEmpty ||
         cookingTime.isEmpty ||
         servings.isEmpty ||
-        category == null) {
+        category == null ||
+        cuisine == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Prosim izpolnite vsa obvezna polja (ime, opis, sestavine, navodila, čas, porcije, kategorija).'),
-          ),
-        );
+        ToastManager.showErrorToast(context,
+            'Prosim izpolnite vsa obvezna polja (ime, opis, sestavine, navodila, čas, porcije, kategorija, kuhinja).');
       }
       setState(() {
         _isLoading = false;
@@ -275,13 +280,8 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
 
     if (userId == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Uporabnik ni prijavljen. Prosim prijavite se.',
-            ),
-          ),
-        );
+        ToastManager.showErrorToast(context,
+            'Uporabnik ni prijavljen. Prosim prijavite se.');
       }
       setState(() {
         _isLoading = false;
@@ -298,16 +298,13 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
           setState(() {
             _isLoading = false;
           });
-          return; // Image upload failed
+          return;
         }
       } catch (e) {
         print('Error during new image upload: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Napaka pri nalaganju nove slike.'),
-            ),
-          );
+          ToastManager.showErrorToast(
+              context, 'Napaka pri nalaganju nove slike.');
         }
         setState(() {
           _isLoading = false;
@@ -315,10 +312,8 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
         return;
       }
     } else if (_isImageRemoved) {
-      // Existing image was explicitly removed by the user
       finalImageUrl = null;
     } else {
-      // No new image selected and existing image not removed, keep current URL
       finalImageUrl = _currentImageUrl;
     }
 
@@ -330,14 +325,16 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
       'cooking_time': cookingTime,
       'servings': servings,
       'category': category,
-      'user_id': userId, 
-      'image_url': finalImageUrl, 
+      'cuisine': cuisine,
+      'user_id': userId,
+      'image_url': finalImageUrl,
     };
 
     try {
-
-      // Perform the update operation using the recipe's ID
-      await supabase.from('recipes').update(recipeData).eq('id', widget.recipe.id);
+      await supabase
+          .from('recipes')
+          .update(recipeData)
+          .eq('id', widget.recipe.id);
 
       print('Updating Recipe:');
       print('   ID: ${widget.recipe.id}');
@@ -348,38 +345,26 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
       print('   Cooking Time: $cookingTime');
       print('   Servings: $servings');
       print('   Category: $category');
+      print('   Cuisine: $cuisine');
       print('   Final Image URL: ${finalImageUrl ?? 'No image'}');
       print('   User ID: $userId');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Recept uspešno posodobljen!'),
-          ),
-        );
+        ToastManager.showSuccessToast(
+            context, 'Recept uspešno posodobljen!'); 
         Navigator.pop(context);
       }
     } on PostgrestException catch (e) {
       print('Supabase Database Error updating recipe: ${e.message}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Napaka pri posodabljanju recepta: ${e.message}',
-            ),
-          ),
-        );
+        ToastManager.showErrorToast(
+            context, 'Napaka pri posodabljanju recepta: ${e.message}'); 
       }
     } catch (e) {
       print('General Recipe Update Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Nepričakovana napaka pri posodabljanju recepta.',
-            ),
-          ),
-        );
+        ToastManager.showErrorToast(context,
+            'Nepričakovana napaka pri posodabljanju recepta.');
       }
     } finally {
       setState(() {
@@ -407,9 +392,7 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
         minLines: minLines,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(
-            color: AppColors.dimGray,
-          ),
+          hintStyle: TextStyle(color: AppColors.dimGray),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 15,
@@ -458,14 +441,12 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
               ),
             ),
             const SizedBox(height: 30),
-
             _buildInputField(
               controller: _recipeNameController,
               hintText: 'Ime recepta',
               keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 20),
-
             _buildInputField(
               controller: _descriptionController,
               hintText: 'Kratek opis recepta',
@@ -474,7 +455,6 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
               minLines: 3,
             ),
             const SizedBox(height: 20),
-
             Text(
               'Sestavine',
               style: TextStyle(
@@ -499,12 +479,13 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
                           keyboardType: TextInputType.text,
                         ),
                       ),
-                      if (_ingredientControllers.length > 1 || controller.text.isNotEmpty)
-                        IconButton(
-                          icon: Icon(Icons.remove_circle_outline,
-                              color: AppColors.tomatoRed),
-                          onPressed: () => _removeIngredientField(idx),
+                      IconButton(
+                        icon: Icon(
+                          Icons.remove_circle_outline,
+                          color: AppColors.tomatoRed,
                         ),
+                        onPressed: () => _removeIngredientField(idx),
+                      ),
                     ],
                   ),
                 );
@@ -515,12 +496,13 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
               child: TextButton.icon(
                 onPressed: _addIngredientField,
                 icon: Icon(Icons.add, color: AppColors.leafGreen),
-                label: Text('Dodaj sestavino',
-                    style: TextStyle(color: AppColors.leafGreen)),
+                label: Text(
+                  'Dodaj sestavino',
+                  style: TextStyle(color: AppColors.leafGreen),
+                ),
               ),
             ),
             const SizedBox(height: 20),
-
             Text(
               'Navodila za pripravo',
               style: TextStyle(
@@ -547,12 +529,13 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
                           minLines: 1,
                         ),
                       ),
-                      if (_instructionControllers.length > 1 || controller.text.isNotEmpty)
-                        IconButton(
-                          icon: Icon(Icons.remove_circle_outline,
-                              color: AppColors.tomatoRed),
-                          onPressed: () => _removeInstructionField(idx),
+                      IconButton(
+                        icon: Icon(
+                          Icons.remove_circle_outline,
+                          color: AppColors.tomatoRed,
                         ),
+                        onPressed: () => _removeInstructionField(idx),
+                      ),
                     ],
                   ),
                 );
@@ -563,12 +546,13 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
               child: TextButton.icon(
                 onPressed: _addInstructionField,
                 icon: Icon(Icons.add, color: AppColors.leafGreen),
-                label: Text('Dodaj korak',
-                    style: TextStyle(color: AppColors.leafGreen)),
+                label: Text(
+                  'Dodaj korak',
+                  style: TextStyle(color: AppColors.leafGreen),
+                ),
               ),
             ),
             const SizedBox(height: 20),
-
             Row(
               children: [
                 Expanded(
@@ -591,7 +575,41 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
               ],
             ),
             const SizedBox(height: 20),
-
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.paleGray,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedCuisine,
+                  hint: Text(
+                    'Kuhinja',
+                    style: TextStyle(color: AppColors.dimGray),
+                  ),
+                  icon: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.dimGray,
+                  ),
+                  isExpanded: true,
+                  style: TextStyle(color: AppColors.charcoal, fontSize: 16),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedCuisine = newValue;
+                    });
+                  },
+                  items:
+                      _cuisines.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
@@ -626,14 +644,15 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
                             _selectedCategory = newValue;
                           });
                         },
-                        items: _categories.map<DropdownMenuItem<String>>(
-                          (String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          },
-                        ).toList(),
+                        items:
+                            _categories.map<DropdownMenuItem<String>>((
+                              String value,
+                            ) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
                       ),
                     ),
                   ),
@@ -643,14 +662,13 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
                   flex: 2,
                   child: ElevatedButton.icon(
                     onPressed: _pickImage,
-                    icon: Icon(
-                      Icons.upload_file,
-                      color: AppColors.charcoal,
-                    ),
+                    icon: Icon(Icons.upload_file, color: AppColors.charcoal),
                     label: Text(
                       _selectedImage != null
                           ? 'Nova slika izbrana!'
-                          : (_currentImageUrl != null ? 'Slika prisotna' : 'Dodaj sliko (neobvezno)'),
+                          : (_currentImageUrl != null
+                              ? 'Slika prisotna'
+                              : 'Dodaj sliko (neobvezno)'),
                       style: TextStyle(color: AppColors.charcoal, fontSize: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -666,60 +684,60 @@ class _UpdateRecipeScreenState extends State<UpdateRecipeScreen> {
                 ),
               ],
             ),
-
             if (_selectedImage != null)
               Padding(
-                padding: const EdgeInsets.only(top: 10.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.file(
-                    File(_selectedImage!.path),
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
+                padding: const EdgeInsets.only(top: 20.0),
+                child: Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      File(_selectedImage!.path),
+                      height: 150,
+                      width: 150,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               )
             else if (_currentImageUrl != null)
               Padding(
-                padding: const EdgeInsets.only(top: 10.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    _currentImageUrl!,
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 100,
-                        width: 100,
-                        color: AppColors.paleGray,
-                        child: Icon(Icons.broken_image, color: AppColors.dimGray),
-                      );
-                    },
+                padding: const EdgeInsets.only(top: 20.0),
+                child: Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      _currentImageUrl!,
+                      height: 150,
+                      width: 150,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 150,
+                          width: 150,
+                          color: AppColors.paleGray,
+                          child: Icon(
+                            Icons.broken_image,
+                            color: AppColors.dimGray,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
             const SizedBox(height: 30),
-
             ElevatedButton(
               onPressed: _isLoading ? null : _updateRecipe,
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(
-                  double.infinity,
-                  50,
-                ),
+                minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               child: _isLoading
-                  ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    )
+                  ? const CircularProgressIndicator(color: Colors.white)
                   : const Text(
-                      'Posodobi recept', 
+                      'Posodobi recept',
                       style: TextStyle(
                         color: AppColors.white,
                         fontSize: 18,

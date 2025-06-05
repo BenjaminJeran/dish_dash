@@ -16,7 +16,6 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   final _supabase = Supabase.instance.client;
 
   List<String> _selectedCuisines = [];
-  List<String> _selectedDiets = [];
 
   final List<String> _availableCuisines = [
     'Italijanska',
@@ -29,16 +28,6 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     'Bližnjevzhodna',
   ];
 
-  final List<String> _availableDiets = [
-    'Vegetarijanska',
-    'Veganska',
-    'Brez glutena',
-    'Keto',
-    'Paleo',
-    'Brez mlečnih izdelkov',
-    'Nizkohidratna',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -49,16 +38,14 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    final data =
-        await _supabase
-            .from('users')
-            .select('preferences')
-            .eq('id', user.id)
-            .single();
+    final data = await _supabase
+        .from('users')
+        .select('preferences')
+        .eq('id', user.id)
+        .single();
 
     final prefs = data['preferences'] ?? {};
     _selectedCuisines = List<String>.from(prefs['cuisine'] ?? []);
-    _selectedDiets = List<String>.from(prefs['diet'] ?? []);
 
     setState(() {});
   }
@@ -73,7 +60,6 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
           .update({
             'preferences': {
               'cuisine': _selectedCuisines,
-              'diet': _selectedDiets,
             },
           })
           .eq('id', user.id);
@@ -150,22 +136,6 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   dropdownDecoratorProps: const DropDownDecoratorProps(
                     dropdownSearchDecoration: InputDecoration(
                       labelText: 'Izberi kuhinje',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownSearch<String>.multiSelection(
-                  items: _availableDiets,
-                  selectedItems: _selectedDiets,
-                  onChanged: (List<String> items) {
-                    setState(() {
-                      _selectedDiets = items;
-                    });
-                  },
-                  dropdownDecoratorProps: const DropDownDecoratorProps(
-                    dropdownSearchDecoration: InputDecoration(
-                      labelText: 'Izberi prehranske navade',
                       border: OutlineInputBorder(),
                     ),
                   ),

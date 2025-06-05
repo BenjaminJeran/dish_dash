@@ -1,4 +1,3 @@
-// lib/pages/main_tab_screen.dart
 import 'package:dish_dash/pages/auth/login_screen.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 import 'package:dish_dash/pages/recipes/shopping_list_screen.dart';
@@ -79,15 +78,14 @@ class _MainTabScreenState extends State<MainTabScreen> {
             DrawerHeader(
 
               decoration: BoxDecoration(color: AppColors.leafGreen),
-              child: const Center(
-                child: Text(
-                'Dish Dash Menu',
+              child: const Text(
+                'Meni Dish Dash',
                 style: TextStyle(color: AppColors.white, fontSize: 24),
               ),),
             ),
             ListTile(
               leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
+              title: const Text('Nastavitve'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -99,7 +97,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.info),
-              title: const Text('About'),
+              title: const Text('O aplikaciji'),
               onTap:
                   () => {
                     Navigator.push(
@@ -112,7 +110,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.shopping_bag),
-              title: const Text("Shopping List"),
+              title: const Text("Nakupovalni seznam"),
               onTap:
                   () => {
                     Navigator.push(
@@ -125,7 +123,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.favorite),
-              title: const Text("Preferences"),
+              title: const Text("Preference"),
               onTap: () {
                 Navigator.push(
                   context,
@@ -137,7 +135,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('LogOut'),
+              title: const Text('Odjava'),
               onTap: () async {
                 try {
                   await Supabase.instance.client.auth.signOut();
@@ -151,7 +149,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
                     );
                   }
                 } catch (e) {
-                  print("Error during logout: $e");
+                  print("Napaka med odjavo: $e");
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Napaka pri odjavi: $e')),
@@ -173,9 +171,9 @@ class _MainTabScreenState extends State<MainTabScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            _buildNavItem(0, Icons.search, 'Explore'),
-            _buildNavItem(1, Icons.menu_book, 'Recipes'),
-            _buildNavItem(2, Icons.stars, 'Challenges'),
+            _buildNavItem(0, Icons.search, 'Raziskuj'),
+            _buildNavItem(1, Icons.menu_book, 'Recepti'),
+            _buildNavItem(2, Icons.stars, 'Izzivi'),
           ],
         ),
       ),
