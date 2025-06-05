@@ -1,3 +1,4 @@
+import 'package:dish_dash/pages/DeepLinking.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/pages/splash_screen.dart';
@@ -25,38 +26,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    //_setupAuthListener();
   }
 
-  //void _setupAuthListener() {
-  //  // Listen for changes in Supabase authentication state
-  //  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-  //    final AuthChangeEvent event = data.event;
-  //    final Session? session = data.session;
-  //
-  //    // Check if the event is a password recovery
-  //    if (event == AuthChangeEvent.passwordRecovery) {
-  //      // When a password recovery link is clicked, Supabase processes the deep link
-  //      // and sets the session. We then navigate to the NewPasswordScreen.
-  //      // The NewPasswordScreen will then use the established session to update the password.
-  //      Navigator.of(context).pushReplacement(
-  //        MaterialPageRoute(
-  //          builder: (context) => const NewPasswordScreen(),
-  //        ),
-  //      );
-  //    } else if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.initialSession) {
-  //      // This block handles initial sign-in or when a user signs in normally.
-  //      // You might want to navigate to a different screen (e.g., home screen) here.
-  //      // For now, it's commented out as per your original code's intent.
-  //      // if (session != null) {
-  //      //   Navigator.of(context).pushAndRemoveUntil(
-  //      //     MaterialPageRoute(builder: (context) => const HomeScreen()), // Replace with your home screen
-  //      //     (Route<dynamic> route) => false,
-  //      //   );
-  //      // }
-  //    }
-  //  });
-  //}
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +116,7 @@ class _MyAppState extends State<MyApp> {
 
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: const DeepLinkHandlerScreen(),
     );
   }
 }
