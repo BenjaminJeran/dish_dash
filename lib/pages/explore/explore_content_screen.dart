@@ -23,12 +23,13 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<Map<String, String>> _categories = [
-    {'name': 'Zajtrk', 'image': 'assets/logo.png'},
-    {'name': 'Kosilo', 'image': 'assets/logo.png'},
-    {'name': 'Večerja', 'image': 'assets/logo.png'},
-    {'name': 'Sladica', 'image': 'assets/logo.png'},
-    {'name': 'Prigrizek', 'image': 'assets/logo.png'},
-    {'name': 'Drugo', 'image': 'assets/logo.png'},
+    {'name': 'Zajtrk', 'image': 'assets/images/breakfast.jpg'},
+    {'name': 'Malica', 'image': 'assets/images/snack.jpg'},
+    {'name': 'Kosilo', 'image': 'assets/images/lunch.jpg'},
+    {'name': 'Večerja', 'image': 'assets/images/dinner.jpg'},
+    {'name': 'Sladica', 'image': 'assets/images/dessert.jpg'},
+    {'name': 'Prigrizek', 'image': 'assets/images/snack.jpg'},
+    {'name': 'Drugo', 'image': 'assets/images/other.jpg'},
   ];
 
   @override
@@ -211,7 +212,7 @@ class _ExploreContentScreenState extends State<ExploreContentScreen> {
                 Text(
                   _getRecipesListTitle(),
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.charcoal,
                   ),
