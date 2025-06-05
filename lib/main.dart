@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/pages/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:dish_dash/pages/auth/new_password.dart'; // Ensure this import path is correct
+import 'package:dish_dash/pages/auth/new_password.dart'; 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,38 +25,38 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _setupAuthListener();
+    //_setupAuthListener();
   }
 
-  void _setupAuthListener() {
-    // Listen for changes in Supabase authentication state
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      final AuthChangeEvent event = data.event;
-      final Session? session = data.session;
-
-      // Check if the event is a password recovery
-      if (event == AuthChangeEvent.passwordRecovery) {
-        // When a password recovery link is clicked, Supabase processes the deep link
-        // and sets the session. We then navigate to the NewPasswordScreen.
-        // The NewPasswordScreen will then use the established session to update the password.
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const NewPasswordScreen(),
-          ),
-        );
-      } else if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.initialSession) {
-        // This block handles initial sign-in or when a user signs in normally.
-        // You might want to navigate to a different screen (e.g., home screen) here.
-        // For now, it's commented out as per your original code's intent.
-        // if (session != null) {
-        //   Navigator.of(context).pushAndRemoveUntil(
-        //     MaterialPageRoute(builder: (context) => const HomeScreen()), // Replace with your home screen
-        //     (Route<dynamic> route) => false,
-        //   );
-        // }
-      }
-    });
-  }
+  //void _setupAuthListener() {
+  //  // Listen for changes in Supabase authentication state
+  //  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+  //    final AuthChangeEvent event = data.event;
+  //    final Session? session = data.session;
+//
+  //    // Check if the event is a password recovery
+  //    if (event == AuthChangeEvent.passwordRecovery) {
+  //      // When a password recovery link is clicked, Supabase processes the deep link
+  //      // and sets the session. We then navigate to the NewPasswordScreen.
+  //      // The NewPasswordScreen will then use the established session to update the password.
+  //      Navigator.of(context).pushReplacement(
+  //        MaterialPageRoute(
+  //          builder: (context) => const NewPasswordScreen(),
+  //        ),
+  //      );
+  //    } else if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.initialSession) {
+  //      // This block handles initial sign-in or when a user signs in normally.
+  //      // You might want to navigate to a different screen (e.g., home screen) here.
+  //      // For now, it's commented out as per your original code's intent.
+  //      // if (session != null) {
+  //      //   Navigator.of(context).pushAndRemoveUntil(
+  //      //     MaterialPageRoute(builder: (context) => const HomeScreen()), // Replace with your home screen
+  //      //     (Route<dynamic> route) => false,
+  //      //   );
+  //      // }
+  //    }
+  //  });
+  //}
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +66,6 @@ class _MyAppState extends State<MyApp> {
       themeMode: ThemeMode.light,
       theme: ThemeData(
         primaryColor: AppColors.leafGreen,
-
-        // Globalne barve
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.leafGreen,
           primary: AppColors.leafGreen,
@@ -97,45 +95,40 @@ class _MyAppState extends State<MyApp> {
           fillColor: AppColors.paleGray,
           border: InputBorder.none,
           enabledBorder: OutlineInputBorder(
-            // Border when enabled but not focused
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none, // No visible border line
+            borderSide: BorderSide.none, 
           ),
           focusedBorder: OutlineInputBorder(
-            // Border when focused
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none, // No visible border line
+            borderSide: BorderSide.none,
           ),
           errorBorder: OutlineInputBorder(
-            // Border for validation errors
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: AppColors.tomatoRed, width: 1.0),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            // Border for validation errors when focused
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: AppColors.tomatoRed, width: 1.5),
           ),
-          hintStyle: TextStyle(color: AppColors.dimGray), // Hint text color
+          hintStyle: TextStyle(color: AppColors.dimGray), 
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 15,
           ),
         ),
 
-        // Define ElevatedButton Theme (Login/Register buttons)
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor:
-                AppColors.leafGreen, // Default background for ElevatedButtons
-            foregroundColor: AppColors.white, // Default text color
+                AppColors.leafGreen, 
+            foregroundColor: AppColors.white, 
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
             padding: const EdgeInsets.symmetric(
               vertical: 15,
               horizontal: 20,
-            ), // Consistent button padding
+            ), 
             textStyle: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -152,19 +145,12 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-
-        // Optionally, define global Text Theme if you have specific fonts/sizes
         textTheme: const TextTheme(
-          // Example for app-wide text styles. You can customize these.
-          // headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.charcoal),
-          // titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.charcoal),
-          // bodyLarge: TextStyle(fontSize: 16, color: AppColors.charcoal),
-          // bodyMedium: TextStyle(fontSize: 14, color: AppColors.dimGray),
         ),
 
-        useMaterial3: true, // Enable Material 3 design features
+        useMaterial3: true,
       ),
-      home: const SplashScreen(), // Your app starts with the LoginScreen
+      home: const SplashScreen(), 
     );
   }
 }
