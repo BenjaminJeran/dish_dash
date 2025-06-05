@@ -6,6 +6,7 @@ import 'widgets/profile_avatar.dart';
 import 'widgets/editable_text_field.dart';
 import 'widgets/about_me_card.dart';
 import 'widgets/cooking_challenge_bar.dart';
+import 'widgets/preferences_card.dart';
 
 class ProfilePageScreen extends StatefulWidget {
   const ProfilePageScreen({super.key});
@@ -114,6 +115,8 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> {
                         setState(() => aboutMe = val);
                       },
                     ),
+                    const SizedBox(height: 20),
+                    const PreferencesCard(),
                     const SizedBox(height: 20),
                     const CookingChallengeBar(),
                   ],
