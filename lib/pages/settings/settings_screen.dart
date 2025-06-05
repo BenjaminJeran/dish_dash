@@ -28,11 +28,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           height: 80,
           child: Center(
             child: Image.asset('assets/logo.png', height: 80),
-          ), // Your app logo
+          ),
         ),
         centerTitle: true,
         actions: const [
-          SizedBox(width: 50), // To balance the back button and center the logo
+          SizedBox(width: 50),
         ],
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -42,11 +42,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 35.0),
         child: Column(
           children: [
-            // Settings Options List
             _buildSettingsOption(
               context,
               icon: Icons.vpn_key_outlined,
-              text: 'Privacy',
+              text: 'Zasebnost',
               onTap: () {
                 Navigator.push(
                   context,
@@ -60,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSettingsOption(
               context,
               icon: Icons.notifications_none,
-              text: 'Push Notifications',
+              text: 'Potisna obvestila',
               onTap: () {
                 Navigator.push(
                   context,
@@ -73,8 +72,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 10),
             _buildSettingsOption(
               context,
-              icon: Icons.favorite_border,
-              text: 'About',
+              icon: Icons.info_outline, // Zamenjana ikona za "O aplikaciji"
+              text: 'O aplikaciji',
               onTap: () {
                 Navigator.push(
                   context,
@@ -86,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSettingsOption(
               context,
               icon: Icons.logout,
-              text: 'Sign Out',
+              text: 'Odjava',
               onTap: () async {
                 try {
                   await Supabase.instance.client.auth.signOut();
@@ -99,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   }
                 } catch (e) {
-                  print("Error during logout: $e");
+                  print("Napaka med odjavo: $e");
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Napaka pri odjavi: $e')),
@@ -108,14 +107,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               },
             ),
-            // Add more options as needed
           ],
         ),
       ),
     );
   }
 
-  // Helper method for building settings options
   Widget _buildSettingsOption(
     BuildContext context, {
     required IconData icon,

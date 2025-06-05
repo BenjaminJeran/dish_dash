@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
-
-// You can now remove this import as it's no longer used in this file
-// import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,7 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isLoading = false; // To show a loading indicator
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -32,34 +29,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      // Check if passwords match
       if (_passwordController.text.trim() !=
           _confirmPasswordController.text.trim()) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gesli se ne ujemata.'), // Passwords do not match.
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Gesli se ne ujemata.')));
         }
         return;
       }
 
       setState(() {
-        _isLoading = true; // Start loading
+        _isLoading = true;
       });
 
       try {
-        // --- SUPABASE REGISTRATION CALL ---
         final AuthResponse response = await Supabase.instance.client.auth
             .signUp(
               email: _emailController.text.trim(),
               password: _passwordController.text.trim(),
             );
-
-        // Supabase signUp requires email confirmation by default.
-        // The user object might be null or contain the user depending on the email confirmation settings.
-        // It's good practice to inform the user about email verification.
 
         if (response.user != null) {
           if (mounted) {
@@ -67,20 +56,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SnackBar(
                 content: Text(
                   'Registracija uspešna! Prosimo, preverite e-pošto za potrditev.',
-                ), // Registration successful! Please check your email for confirmation.
+                ),
               ),
             );
-            Navigator.pop(context); // Go back to the login screen
+            Navigator.pop(context);
           }
         } else {
-          // This else block might be hit if the user is created but no session is returned
-          // because email confirmation is required.
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
                   'Registracija uspešna, vendar se niste prijavili. Preverite e-pošto za potrditev.',
-                ), // Registration successful, but not logged in. Check email for confirmation.
+                ),
               ),
             );
             Navigator.pop(context);
@@ -88,25 +75,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       } on AuthException catch (e) {
         String message;
-        // Supabase AuthException codes for registration might include:
-        // 'User already registered', 'Email rate limit exceeded', 'Invalid email'
         if (e.message.contains('User already registered')) {
-          message =
-              'E-poštni naslov je že v uporabi.'; // The email address is already in use.
+          message = 'E-poštni naslov je že v uporabi.';
         } else if (e.message.contains('Email rate limit exceeded')) {
-          message =
-              'Preveč poskusov registracije. Poskusite znova kasneje.'; // Too many registration attempts. Try again later.
+          message = 'Preveč poskusov registracije. Poskusite znova kasneje.';
         } else if (e.message.contains('Invalid email')) {
-          message =
-              'E-poštni naslov ni pravilno oblikovan.'; // The email address is badly formatted.
+          message = 'E-poštni naslov ni pravilno oblikovan.';
         } else if (e.message.contains(
           'Password should be at least 6 characters',
         )) {
-          message =
-              'Geslo mora imeti vsaj 6 znakov.'; // Password must be at least 6 characters.
+          message = 'Geslo mora imeti vsaj 6 znakov.';
         } else {
-          message =
-              'Napaka pri registraciji: ${e.message}'; // Generic error message
+          message = 'Napaka pri registraciji: ${e.message}';
         }
         if (mounted) {
           ScaffoldMessenger.of(
@@ -116,14 +96,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Prišlo je do nepričakovane napake: $e'),
-            ), // An unexpected error occurred.
+            SnackBar(content: Text('Prišlo je do nepričakovane napake: $e')),
           );
         }
       } finally {
         setState(() {
-          _isLoading = false; // Stop loading regardless of success or failure
+          _isLoading = false;
         });
       }
     }
@@ -146,19 +124,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Screen Title
                 const Text(
                   'Registracija',
                   style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-
-                // Email Input Field
                 TextFormField(
-                  controller: _emailController, // Assign controller
-                  keyboardType:
-                      TextInputType.emailAddress, // Optimize keyboard for email
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'E-pošta',
                     border: OutlineInputBorder(),
@@ -169,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return 'Prosim vnesite e-pošto';
                     }
                     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Prosim vnesite veljaven e-poštni naslov'; // Please enter a valid email address
+                      return 'Prosim vnesite veljaven e-poštni naslov';
                     }
                     return null;
                   },
@@ -178,10 +152,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Password Input Field with Eye Icon
                 TextFormField(
-                  controller: _passwordController, // Assign controller
+                  controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Geslo',
@@ -205,7 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return 'Prosim vnesite geslo';
                     }
                     if (value.length < 6) {
-                      return 'Geslo mora imeti vsaj 6 znakov'; // Password must be at least 6 characters.
+                      return 'Geslo mora imeti vsaj 6 znakov';
                     }
                     return null;
                   },
@@ -214,10 +186,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Confirm Password Input Field with Eye Icon
                 TextFormField(
-                  controller: _confirmPasswordController, // Assign controller
+                  controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
                     labelText: 'Potrdi geslo',
@@ -240,7 +210,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Prosim potrdite geslo';
                     }
-                    // This check will be done in the _register method for better user feedback
                     return null;
                   },
                   style: TextStyle(
@@ -248,13 +217,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // Register Button
                 ElevatedButton(
-                  onPressed:
-                      _isLoading
-                          ? null
-                          : _register, // Disable button while loading
+                  onPressed: _isLoading ? null : _register,
                   child:
                       _isLoading
                           ? const SizedBox(
@@ -268,8 +232,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           : const Text('Registracija'),
                 ),
                 const SizedBox(height: 12),
-
-                // Back to Login Link
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);

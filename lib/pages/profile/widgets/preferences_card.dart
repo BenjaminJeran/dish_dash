@@ -32,7 +32,6 @@ class _PreferencesCardState extends State<PreferencesCard> {
 
   Future<void> _editPreferencesDialog() async {
     List<String> cuisines = List<String>.from(_preferences['cuisine'] ?? []);
-    List<String> diets = List<String>.from(_preferences['diet'] ?? []);
 
     final List<String> availableCuisines = [
       'Italijanska',
@@ -45,16 +44,6 @@ class _PreferencesCardState extends State<PreferencesCard> {
       'Bližnjevzhodna',
     ];
 
-    final List<String> availableDiets = [
-      'Vegetarijanska',
-      'Veganska',
-      'Brez glutena',
-      'Keto',
-      'Paleo',
-      'Brez mlečnih izdelkov',
-      'Nizkohidratna',
-    ];
-
     await showDialog(
       context: context,
       builder: (context) {
@@ -63,10 +52,7 @@ class _PreferencesCardState extends State<PreferencesCard> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
@@ -105,30 +91,6 @@ class _PreferencesCardState extends State<PreferencesCard> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Prehranske navade',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        color: AppColors.charcoal,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownSearch<String>.multiSelection(
-                    items: availableDiets,
-                    selectedItems: diets,
-                    onChanged: (items) => diets = items,
-                    dropdownDecoratorProps: const DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        filled: true,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -144,7 +106,6 @@ class _PreferencesCardState extends State<PreferencesCard> {
                         onPressed: () async {
                           await _userService.updateUserPreferences({
                             'cuisine': cuisines,
-                            'diet': diets,
                           });
                           if (mounted) {
                             Navigator.pop(context);
@@ -174,9 +135,7 @@ class _PreferencesCardState extends State<PreferencesCard> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final cuisine =
-        (_preferences['cuisine'] as List?)?.join(', ') ?? 'ni izbrano';
-    final diet = (_preferences['diet'] as List?)?.join(', ') ?? 'ni izbrano';
+    final cuisine = (_preferences['cuisine'] as List?)?.join(', ') ?? 'ni izbrano';
 
     return Card(
       margin: const EdgeInsets.only(top: 10),
@@ -208,11 +167,6 @@ class _PreferencesCardState extends State<PreferencesCard> {
             const SizedBox(height: 10),
             Text(
               'Kuhinje: $cuisine',
-              style: const TextStyle(color: AppColors.dimGray, fontSize: 16),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Prehrane: $diet',
               style: const TextStyle(color: AppColors.dimGray, fontSize: 16),
             ),
           ],
