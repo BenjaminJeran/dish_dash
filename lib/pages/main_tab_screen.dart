@@ -7,7 +7,7 @@ import 'package:dish_dash/pages/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:dish_dash/pages/profile/preferences_screen.dart';
+import 'package:dish_dash/pages/settings/preferences_screen.dart';
 import 'package:dish_dash/pages/explore/explore_content_screen.dart';
 import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
 import 'package:dish_dash/pages/recipes/create_recipe_screen.dart';

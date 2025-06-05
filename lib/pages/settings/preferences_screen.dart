@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
+import 'package:dish_dash/helpers/toast_manager.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -66,17 +67,27 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    await _supabase
-        .from('users')
-        .update({
-          'preferences': {'cuisine': _selectedCuisines, 'diet': _selectedDiets},
-        })
-        .eq('id', user.id);
+    try {
+      await _supabase
+          .from('users')
+          .update({
+            'preferences': {
+              'cuisine': _selectedCuisines,
+              'diet': _selectedDiets,
+            },
+          })
+          .eq('id', user.id);
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nastavitve uspešno shranjene!')),
-      );
+      if (mounted) {
+        ToastManager.showSuccessToast(context, 'Nastavitve uspešno shranjene!');
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastManager.showErrorToast(
+          context,
+          'Napaka pri shranjevanju: ${e.toString()}',
+        );
+      }
     }
   }
 
