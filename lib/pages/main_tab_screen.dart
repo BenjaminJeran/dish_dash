@@ -132,7 +132,6 @@ class _MainTabScreenState extends State<MainTabScreen> {
                 );
               },
             ),
-
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('LogOut'),
@@ -161,18 +160,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateRecipeScreen()),
-          );
-        },
-        backgroundColor: AppColors.leafGreen,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: AppColors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      // Use a Stack to position the FloatingActionButton
       bottomNavigationBar: BottomAppBar(
         color: AppColors.white,
         surfaceTintColor: AppColors.white,
@@ -183,13 +171,41 @@ class _MainTabScreenState extends State<MainTabScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            //_buildNavItem(0, Icons.home, 'Home'),
             _buildNavItem(0, Icons.search, 'Explore'),
             _buildNavItem(1, Icons.menu_book, 'Recipes'),
             _buildNavItem(2, Icons.stars, 'Challenges'),
           ],
         ),
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 50.0,
+        ), // Adjust this value as needed
+        child: SizedBox(
+          // Wrap the FloatingActionButton with SizedBox
+          width:
+              70.0, // Set your desired width (e.g., 70.0 for a larger button)
+          height: 70.0, // Set your desired height (e.g., 70.0)
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateRecipeScreen(),
+                ),
+              );
+            },
+            backgroundColor: AppColors.leafGreen,
+            shape: const CircleBorder(),
+            child: const Icon(
+              Icons.add,
+              color: AppColors.white,
+              size: 35.0,
+            ), // Adjust icon size to fit the larger button
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
   }
 
