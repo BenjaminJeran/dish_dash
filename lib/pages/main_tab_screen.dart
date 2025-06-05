@@ -72,15 +72,18 @@ class _MainTabScreenState extends State<MainTabScreen> {
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
       drawer: Drawer(
+        backgroundColor: AppColors.white,
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
+
               decoration: BoxDecoration(color: AppColors.leafGreen),
-              child: const Text(
+              child: const Center(
+                child: Text(
                 'Dish Dash Menu',
                 style: TextStyle(color: AppColors.white, fontSize: 24),
-              ),
+              ),),
             ),
             ListTile(
               leading: const Icon(Icons.settings),

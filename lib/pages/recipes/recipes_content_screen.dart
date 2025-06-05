@@ -38,9 +38,11 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
           .order('created_at', ascending: false);
       final List<Map<String, dynamic>> recipesData =
           List<Map<String, dynamic>>.from(data);
-      setState(() {
-        _userRecipes = recipesData.map((map) => Recipe.fromMap(map)).toList();
-      });
+      if (mounted) { 
+        setState(() {
+          _userRecipes = recipesData.map((map) => Recipe.fromMap(map)).toList();
+        });
+      }
       return recipesData;
     } on PostgrestException catch (e) {
       print('Supabase Database napaka pri pridobivanju receptov: ${e.message}');
@@ -63,10 +65,12 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
       );
       final List<Map<String, dynamic>> likedRecipesData =
           List<Map<String, dynamic>>.from(data);
-      setState(() {
-        _likedRecipes =
-            likedRecipesData.map((map) => Recipe.fromMap(map)).toList();
-      });
+      if (mounted) {  
+        setState(() {
+          _likedRecipes =
+              likedRecipesData.map((map) => Recipe.fromMap(map)).toList();
+        });
+      }
       return likedRecipesData;
     } on PostgrestException catch (e) {
       print('Napaka pri pridobivanju vseckanih podatkov: ${e.message}');
@@ -84,7 +88,9 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
       );
       if (index != -1) {
         _userRecipes.removeAt(index);
-        setState(() {});
+        if (mounted) { 
+          setState(() {});
+        }
         await supabase.from('recipes').delete().eq('id', recipeId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -111,9 +117,11 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
           ),
         );
       }
-      setState(() {
-        _userRecipesFuture = _fetchUserRecipes();
-      });
+      if (mounted) {
+        setState(() {
+          _userRecipesFuture = _fetchUserRecipes();
+        });
+      }
     } catch (e) {
       print('General error deleting recipe: $e');
       if (mounted) {
@@ -127,9 +135,11 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
           ),
         );
       }
-      setState(() {
-        _userRecipesFuture = _fetchUserRecipes();
-      });
+      if (mounted) { 
+        setState(() {
+          _userRecipesFuture = _fetchUserRecipes();
+        });
+      }
     }
   }
 
@@ -139,7 +149,11 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
       MaterialPageRoute(
         builder: (context) => UpdateRecipeScreen(recipe: recipe),
       ),
-    ).then((_) => _fetchUserRecipes());
+    ).then((_) {
+      if (mounted) { 
+        _fetchUserRecipes();
+      }
+    });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -229,13 +243,15 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      if (future == _userRecipesFuture) {
-                        _userRecipesFuture = _fetchUserRecipes();
-                      } else if (future == _likedRecipesFuture) {
-                        _likedRecipesFuture = _fetchLikedRecipes();
-                      }
-                    });
+                    if (mounted) {
+                      setState(() {
+                        if (future == _userRecipesFuture) {
+                          _userRecipesFuture = _fetchUserRecipes();
+                        } else if (future == _likedRecipesFuture) {
+                          _likedRecipesFuture = _fetchLikedRecipes();
+                        }
+                      });
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.leafGreen,
@@ -436,7 +452,6 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                 crossAxisAlignment:
                     CrossAxisAlignment.stretch, 
                 children: [
-                  // Image Section
                   Container(
                     width: 120,
                     decoration: BoxDecoration(
@@ -450,19 +465,18 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
                       ),
-                      child:
-                          recipe.imageUrl.isNotEmpty
-                              ? Image.network(
-                                recipe.imageUrl,
-                                width: 120,
-                                fit:
-                                    BoxFit
-                                        .cover, 
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildCompactImagePlaceholder();
-                                },
-                              )
-                              : _buildCompactImagePlaceholder(),
+                      child: recipe.imageUrl.isNotEmpty
+                          ? Image.network(
+                              recipe.imageUrl,
+                              width: 120,
+                              fit:
+                                  BoxFit
+                                      .cover, 
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildCompactImagePlaceholder();
+                              },
+                            )
+                          : _buildCompactImagePlaceholder(),
                     ),
                   ),
                   Expanded(
@@ -471,7 +485,6 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -552,7 +565,7 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
                                     ),
                                     const SizedBox(width: 3),
                                     Text(
-                                      '${recipe.cookingTime} min', 
+                                      '${recipe.cookingTime} min',
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: AppColors.leafGreen,
