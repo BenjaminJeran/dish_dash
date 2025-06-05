@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/pages/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:dish_dash/pages/auth/new_password.dart'; 
+import 'package:dish_dash/pages/auth/new_password.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +33,7 @@ class _MyAppState extends State<MyApp> {
   //  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
   //    final AuthChangeEvent event = data.event;
   //    final Session? session = data.session;
-//
+  //
   //    // Check if the event is a password recovery
   //    if (event == AuthChangeEvent.passwordRecovery) {
   //      // When a password recovery link is clicked, Supabase processes the deep link
@@ -96,7 +96,7 @@ class _MyAppState extends State<MyApp> {
           border: InputBorder.none,
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none, 
+            borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
@@ -110,7 +110,7 @@ class _MyAppState extends State<MyApp> {
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: AppColors.tomatoRed, width: 1.5),
           ),
-          hintStyle: TextStyle(color: AppColors.dimGray), 
+          hintStyle: TextStyle(color: AppColors.dimGray),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 15,
@@ -119,16 +119,12 @@ class _MyAppState extends State<MyApp> {
 
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                AppColors.leafGreen, 
-            foregroundColor: AppColors.white, 
+            backgroundColor: AppColors.leafGreen,
+            foregroundColor: AppColors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
-            padding: const EdgeInsets.symmetric(
-              vertical: 15,
-              horizontal: 20,
-            ), 
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             textStyle: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -145,12 +141,11 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-        textTheme: const TextTheme(
-        ),
+        textTheme: const TextTheme(),
 
         useMaterial3: true,
       ),
-      home: const SplashScreen(), 
+      home: const SplashScreen(),
     );
   }
 }

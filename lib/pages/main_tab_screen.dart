@@ -7,7 +7,7 @@ import 'package:dish_dash/pages/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:dish_dash/pages/settings/preferences_screen.dart';
 import 'package:dish_dash/pages/explore/explore_content_screen.dart';
 import 'package:dish_dash/pages/recipes/recipes_content_screen.dart';
 import 'package:dish_dash/pages/recipes/create_recipe_screen.dart';
@@ -21,12 +21,12 @@ class MainTabScreen extends StatefulWidget {
 }
 
 class _MainTabScreenState extends State<MainTabScreen> {
-  int _selectedIndex = 0; 
+  int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
     ExploreContentScreen(),
     RecipesContentScreen(),
-    CookingChallengeScreen(), 
+    CookingChallengeScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -40,12 +40,13 @@ class _MainTabScreenState extends State<MainTabScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
+          builder:
+              (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
         ),
         title: SizedBox(
           height: 80,
@@ -96,27 +97,42 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
-              onTap: () => {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AboutScreen(),
-                  ),
-                ),
-              },
+              onTap:
+                  () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutScreen(),
+                      ),
+                    ),
+                  },
             ),
             ListTile(
               leading: const Icon(Icons.shopping_bag),
               title: const Text("Shopping List"),
-              onTap: () => {
+              onTap:
+                  () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ShoppingListScreen(),
+                      ),
+                    ),
+                  },
+            ),
+            ListTile(
+              leading: const Icon(Icons.favorite),
+              title: const Text("Preferences"),
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ShoppingListScreen(),
+                    builder: (context) => const PreferencesScreen(),
                   ),
-                ),
+                );
               },
             ),
+
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('LogOut'),

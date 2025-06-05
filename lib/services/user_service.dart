@@ -36,4 +36,28 @@ class UserService {
       'created_at': DateTime.now().toIso8601String(),
     });
   }
+
+  Future<Map<String, dynamic>?> getUserPreferences() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return null;
+
+    final response =
+        await Supabase.instance.client
+            .from('users')
+            .select('preferences')
+            .eq('id', user.id)
+            .single();
+
+    return response['preferences'] ?? {};
+  }
+
+  Future<void> updateUserPreferences(Map<String, dynamic> preferences) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    await Supabase.instance.client
+        .from('users')
+        .update({'preferences': preferences})
+        .eq('id', user.id);
+  }
 }
