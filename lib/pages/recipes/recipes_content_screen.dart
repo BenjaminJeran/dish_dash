@@ -154,18 +154,6 @@ class _RecipesContentScreenState extends State<RecipesContentScreen> {
         _fetchUserRecipes();
       }
     });
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Uredi recept: ${recipe.name}',
-            style: TextStyle(color: AppColors.white),
-          ),
-          backgroundColor: AppColors.paleLime,
-        ),
-      );
-    }
-    print('Edit recipe: ${recipe.name}');
   }
 
   @override

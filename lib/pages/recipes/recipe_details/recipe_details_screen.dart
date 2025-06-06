@@ -1,3 +1,4 @@
+// lib/pages/recipes/recipe_details_screen.dart
 import 'package:dish_dash/pages/recipes/recipe_details/widgets/IngredientsSectionCard.dart';
 import 'package:dish_dash/pages/recipes/recipe_details/widgets/PreparationStepsSectionCard.dart';
 import 'package:dish_dash/pages/recipes/recipe_details/widgets/RecipeImageSection.dart';
@@ -9,6 +10,7 @@ import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
 import 'package:dish_dash/models/comment.dart';
+import 'package:dish_dash/services/shopping_list_service.dart'; // Import ShoppingListService
 
 class RecipeDetailsScreen extends StatefulWidget {
   final Recipe recipe;
@@ -21,20 +23,22 @@ class RecipeDetailsScreen extends StatefulWidget {
 
 class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
+  late final ShoppingListService _shoppingListService; // Declare ShoppingListService
   int _likesCount = 0;
   bool _isLikedByUser = false;
   String? _currentUserId;
 
-  final TextEditingController _commentController =
-      TextEditingController(); 
-  List<Comment> _comments = []; 
+  final TextEditingController _commentController = TextEditingController();
+  List<Comment> _comments = [];
   bool _isLoadingComments = false;
-  String? _commentErrorMessage; 
+  String? _commentErrorMessage;
+
   @override
   void initState() {
     super.initState();
     _currentUserId = supabase.auth.currentUser?.id;
-    _fetchComments(); 
+    _shoppingListService = ShoppingListService(supabase); // Initialize ShoppingListService
+    _fetchComments();
   }
 
   @override
@@ -47,6 +51,14 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  void _showSnackBar(String message, {Duration duration = const Duration(seconds: 1)}) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: duration),
+      );
+    }
   }
 
   Future<void> _fetchLikeStatusAndCount() async {
@@ -204,7 +216,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
           .from('comments')
           .select(
             '*, users(name)',
-          ) 
+          )
           .eq('recipe_id', widget.recipe.id)
           .order('created_at', ascending: true);
 
@@ -279,7 +291,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
           ),
         );
       }
-      _fetchComments(); 
+      _fetchComments();
     } on PostgrestException catch (e) {
       print('Supabase napaka pri objavi komentarja: ${e.message}');
       if (mounted) {
@@ -306,6 +318,28 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _addIngredientsToShoppingList() async {
+    if (_currentUserId == null) {
+      _showSnackBar('Potrebno se je prijaviti za dodajanje sestavin v nakupovalni seznam.');
+      return;
+    }
+
+    if (widget.recipe.ingredients.isEmpty) {
+      _showSnackBar('Recept ne vsebuje sestavin.');
+      return;
+    }
+
+    _showSnackBar('Dodajanje sestavin v nakupovalni seznam...');
+    try {
+      for (final ingredient in widget.recipe.ingredients) {
+        await _shoppingListService.addItem(_currentUserId!, ingredient);
+      }
+      _showSnackBar('Sestavine dodane v nakupovalni seznam!', duration: const Duration(seconds: 2));
+    } catch (e) {
+      _showSnackBar('Napaka pri dodajanju sestavin: $e');
     }
   }
 
@@ -364,6 +398,28 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                   ),
                   const SizedBox(height: 15),
 
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _addIngredientsToShoppingList,
+                      icon: const Icon(Icons.playlist_add),
+                      label: const Text('Dodaj v nakupovalni seznam'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.leafGreen,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+
                   PreparationStepsSectionCard(
                     emoji: '👨‍🍳',
                     instructions: widget.recipe.instructions,
@@ -399,7 +455,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                         horizontal: 15,
                       ),
                     ),
-                    maxLines: null, 
+                    maxLines: null,
                   ),
                   const SizedBox(height: 20),
 
@@ -433,7 +489,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                                 )
                               : ListView.builder(
                                   shrinkWrap:
-                                      true, 
+                                      true,
                                   physics:
                                       const NeverScrollableScrollPhysics(),
                                   itemCount: _comments.length,
