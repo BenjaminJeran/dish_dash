@@ -343,6 +343,11 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         _selectedCuisine = null;
         _selectedImage = null;
       });
+
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+
     } on PostgrestException catch (e) {
       print('Supabase Database Error: ${e.message}');
       if (mounted) {
@@ -722,13 +727,13 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                        'Dodaj recept',
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          'Dodaj recept',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
             ),
           ],
         ),

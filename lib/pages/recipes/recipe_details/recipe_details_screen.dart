@@ -1,16 +1,16 @@
 // lib/pages/recipes/recipe_details_screen.dart
 import 'package:dish_dash/pages/recipes/recipe_details/widgets/IngredientsSectionCard.dart';
 import 'package:dish_dash/pages/recipes/recipe_details/widgets/PreparationStepsSectionCard.dart';
-import 'package:dish_dash/pages/recipes/recipe_details/widgets/RecipeImageSection.dart';
-import 'package:dish_dash/pages/recipes/recipe_details/widgets/RecipeInfoSection.dart';
+
+import 'package:dish_dash/pages/recipes/recipe_details/widgets/RecipeImageSection.dart';import 'package:dish_dash/pages/recipes/recipe_details/widgets/RecipeInfoSection.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart';
 import 'package:dish_dash/pages/profile/profile_page_screen.dart';
-import 'package:dish_dash/models/comment.dart';
-import 'package:dish_dash/services/shopping_list_service.dart'; // Import ShoppingListService
+import 'package:dish_dash/models/comment.dart'; 
+import 'package:dish_dash/services/shopping_list_service.dart';
 
 class RecipeDetailsScreen extends StatefulWidget {
   final Recipe recipe;
@@ -23,7 +23,7 @@ class RecipeDetailsScreen extends StatefulWidget {
 
 class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
-  late final ShoppingListService _shoppingListService; // Declare ShoppingListService
+  late final ShoppingListService _shoppingListService;
   int _likesCount = 0;
   bool _isLikedByUser = false;
   String? _currentUserId;
@@ -37,7 +37,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
   void initState() {
     super.initState();
     _currentUserId = supabase.auth.currentUser?.id;
-    _shoppingListService = ShoppingListService(supabase); // Initialize ShoppingListService
+    _shoppingListService = ShoppingListService(supabase);
     _fetchComments();
   }
 
@@ -204,7 +204,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
     }
   }
 
-  // zA KOMENTARJE
+  // Method to fetch comments
   Future<void> _fetchComments() async {
     setState(() {
       _isLoadingComments = true;
@@ -215,7 +215,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       final List<dynamic> data = await supabase
           .from('comments')
           .select(
-            '*, users(name)',
+            '*, users(name)', // Select comment fields and user's name
           )
           .eq('recipe_id', widget.recipe.id)
           .order('created_at', ascending: true);
@@ -320,6 +320,37 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       }
     }
   }
+
+  Future<void> _deleteComment(String commentId) async {
+    if (_currentUserId == null) {
+      _showSnackBar('Za brisanje komentarja se morate prijaviti.');
+      return;
+    }
+
+    try {
+      await supabase
+          .from('comments')
+          .delete()
+          .eq('id', commentId) 
+          .eq('user_id', _currentUserId!); 
+
+      if (mounted) {
+        _showSnackBar('Komentar uspešno izbrisan!', duration: const Duration(seconds: 2));
+      }
+      _fetchComments(); 
+    } on PostgrestException catch (e) {
+      print('Supabase napaka pri brisanju komentarja: ${e.message}');
+      if (mounted) {
+        _showSnackBar('Napaka pri brisanju komentarja: ${e.message}');
+      }
+    } catch (e) {
+      print('Nepričakovana napaka pri brisanju komentarja: $e');
+      if (mounted) {
+        _showSnackBar('Nepričakovana napaka pri brisanju komentarja.');
+      }
+    }
+  }
+
 
   Future<void> _addIngredientsToShoppingList() async {
     if (_currentUserId == null) {
@@ -488,13 +519,16 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                                   ),
                                 )
                               : ListView.builder(
-                                  shrinkWrap:
-                                      true,
+                                  shrinkWrap: true,
                                   physics:
                                       const NeverScrollableScrollPhysics(),
                                   itemCount: _comments.length,
                                   itemBuilder: (context, index) {
                                     final comment = _comments[index];
+                                    final bool isCommentOwner =
+                                        _currentUserId != null &&
+                                            _currentUserId == comment.userId;
+
                                     return Card(
                                       margin: const EdgeInsets.only(bottom: 10),
                                       color: AppColors.paleGray,
@@ -505,16 +539,30 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(12.0),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Text(
-                                              comment.userName ??
-                                                  'Neznan uporabnik',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.charcoal,
-                                                fontSize: 16,
-                                              ),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  comment.userName ??
+                                                      'Neznan uporabnik',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.charcoal,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+              
+                                                if (isCommentOwner)
+                                                  IconButton(
+                                                    icon: Icon(Icons.delete, color: AppColors.tomatoRed, size: 20),
+                                                    onPressed: () => _deleteComment(comment.id),
+                                                    padding: EdgeInsets.zero, 
+                                                    constraints: BoxConstraints(), 
+                                                  ),
+                                              ],
                                             ),
                                             const SizedBox(height: 5),
                                             Text(
