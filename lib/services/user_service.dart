@@ -54,7 +54,6 @@ class UserService {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    // Keep only the "cuisine" key
     final cleanedPreferences = {
       'cuisine': preferences['cuisine'] ?? [],
     };

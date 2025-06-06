@@ -1,5 +1,5 @@
-// lib/models/user_challenge.dart
-import 'package:dish_dash/models/challenge.dart'; // Make sure to import your Challenge model
+
+import 'package:dish_dash/models/challenge.dart'; 
 
 class UserChallenge {
   final String id;
@@ -7,9 +7,9 @@ class UserChallenge {
   final String challengeId;
   final DateTime joinedAt;
   final int currentDay;
-  final DateTime? lastCompletedDayAt; // Nullable
+  final DateTime? lastCompletedDayAt;
   final bool isCompleted;
-  final Challenge? challenge; // Add the related Challenge object
+  final Challenge? challenge; 
 
   UserChallenge({
     required this.id,
@@ -17,13 +17,12 @@ class UserChallenge {
     required this.challengeId,
     required this.joinedAt,
     required this.currentDay,
-    this.lastCompletedDayAt, // Nullable parameter
+    this.lastCompletedDayAt, 
     required this.isCompleted,
-    this.challenge, // Make it nullable initially, but populated when fetched with join
+    this.challenge, 
   });
 
   factory UserChallenge.fromJson(Map<String, dynamic> json) {
-    // Check if 'challenges' key exists and is not null (from the join)
     final Challenge? relatedChallenge = json['challenges'] != null
         ? Challenge.fromJson(json['challenges'] as Map<String, dynamic>)
         : null;
@@ -38,10 +37,9 @@ class UserChallenge {
           ? DateTime.parse(json['last_completed_day_at'])
           : null,
       isCompleted: json['is_completed'],
-      challenge: relatedChallenge, // Assign the parsed challenge
+      challenge: relatedChallenge, 
     );
   }
 
-  // Helper to get durationDays easily
   int get durationDays => challenge?.durationDays ?? 0;
 }

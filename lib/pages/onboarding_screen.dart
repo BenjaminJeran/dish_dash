@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:dish_dash/colors/app_colors.dart'; // Make sure this path is correct
-import 'package:dish_dash/pages/auth/login_screen.dart'; // Assuming you want to go here after onboarding
-// import 'package:dish_dash/pages/main_tab_screen.dart'; // Or to your main app screen
+import 'package:dish_dash/colors/app_colors.dart';
+import 'package:dish_dash/pages/auth/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -153,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const Spacer(
             flex: 3,
-          ), // Pushes content upwards, leaves space at bottom
+          ), 
         ],
       ),
     );
@@ -164,7 +163,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 5.0),
       height: 10,
-      width: _currentPage == index ? 24 : 10, // Make current dot longer
+      width: _currentPage == index ? 24 : 10, 
       decoration: BoxDecoration(
         color: _currentPage == index ? AppColors.leafGreen : AppColors.paleGray,
         borderRadius: BorderRadius.circular(5),

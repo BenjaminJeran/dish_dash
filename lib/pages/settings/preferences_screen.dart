@@ -35,20 +35,34 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
+  final user = _supabase.auth.currentUser;
+  if (user == null) return;
 
+  try {
     final data = await _supabase
         .from('users')
         .select('preferences')
         .eq('id', user.id)
-        .single();
+        .maybeSingle(); 
 
-    final prefs = data['preferences'] ?? {};
-    _selectedCuisines = List<String>.from(prefs['cuisine'] ?? []);
-
-    setState(() {});
+    if (data != null && data['preferences'] != null) {
+      final prefs = data['preferences'] as Map<String, dynamic>;
+      _selectedCuisines = List<String>.from(prefs['cuisine'] ?? []);
+    } else {
+      _selectedCuisines = []; 
+    }
+  } catch (e) {
+    if (mounted) {
+      ToastManager.showErrorToast(
+        context,
+        'Napaka pri nalaganju preferenc: ${e.toString()}',
+      );
+    }
+    _selectedCuisines = []; 
+  } finally {
+    setState(() {}); 
   }
+}
 
   Future<void> _savePreferences() async {
     final user = _supabase.auth.currentUser;

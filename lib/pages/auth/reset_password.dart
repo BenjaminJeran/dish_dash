@@ -72,7 +72,7 @@ class ResetPasswordScreen extends StatelessWidget {
                             ),
                           ),
                         );
-                        Navigator.pop(context); // Go back to login
+                        Navigator.pop(context); 
                       } catch (error) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -83,12 +83,12 @@ class ResetPasswordScreen extends StatelessWidget {
                       }
                     }
                   },
-                  child: const Text('Pošlji'), // "Send"
+                  child: const Text('Pošlji'), 
                 ),
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Nazaj na prijavo'), // "Back to Login"
+                  child: const Text('Nazaj na prijavo'), 
                 ),
               ],
             ),
