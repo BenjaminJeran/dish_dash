@@ -1,4 +1,4 @@
-// lib/widgets/recipe_info_section.dart
+
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/models/recipe.dart'; 

@@ -86,3 +86,17 @@ Večina obstoječih aplikacij ni dovolj intuitivnih in ne ponuja naprednih funkc
 - 🗃️ [Supabase Dokumentacija](https://supabase.com/docs)
 - 🧑‍🍳 [Flutter Cookbook](https://docs.flutter.dev/cookbook)
 - 🚀 [Tvoj prvi Flutter projekt](https://docs.flutter.dev/get-started/codelab)
+
+
+
+## 🖼️ Posnetki zaslona aplikacije
+
+Spodaj so predstavljeni nekateri ključni zasloni aplikacije **DishDash**, ki prikazujejo njeno uporabniško izkušnjo in funkcionalnosti.
+
+| Zaslon               | Opis                                                                 | Predogled                            |
+|----------------------|----------------------------------------------------------------------|---------------------------------------|
+| **Prijava**          | Uporabnik se prijavi v svoj račun za dostop do personaliziranih funkcij. | ![Prijava](doc_images/login.png)     |
+| **Registracija**     | Hiter in enostaven postopek za ustvarjanje novega uporabniškega računa. | ![Registracija](doc_images/register.png) |
+| **Raziskovanje receptov** | Glavna stran za odkrivanje raznolikih receptov iz celega sveta.       | ![Explore page](doc_images/recipe.png) |
+| **Moji recepti**      | Pregled osebne zbirke receptov, ki jih je uporabnik ustvaril ali shranil. | ![Moji recepti](doc_images/myrecipe.png) |
+| **Kuharski izzivi**   | Vmesnik za sodelovanje v kulinaričnih izzivih in povezovanje s skupnostjo. | ![Izziv](doc_images/izziv.png)       |
