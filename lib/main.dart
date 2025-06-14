@@ -2,15 +2,27 @@ import 'package:dish_dash/pages/DeepLinking.dart';
 import 'package:flutter/material.dart';
 import 'package:dish_dash/colors/app_colors.dart';
 import 'package:dish_dash/pages/splash_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/pages/auth/new_password.dart';
 
 Future<void> main() async {
+
+
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load(fileName: ".env"); 
+  } catch (e) {
+    throw Exception('Error loading .env file: $e'); 
+  }
+
+  final String apiKey = dotenv.env['ANON_KEY'] ?? 'default_key';
+
   await Supabase.initialize(
     url: 'https://hpeuvvghrjvtikkgdnql.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZXV2dmdocmp2dGlra2dkbnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTc5NzcsImV4cCI6MjA2NDI5Mzk3N30.X9WE_VvUhjF9ZU6FSDosCJda0mkqd_e1sjdJYt2haxo',
+        apiKey
   );
   runApp(const MyApp());
 }
