@@ -14,18 +14,38 @@
 
 ---
 
-## 🚀 Kako začeti
+## 📋 Vzpostavitvena dokumentacija
 
-Ta projekt je zgrajen z uporabo **Flutter** in **Supabase**.
+### 🔧 Predpogoji
+Za uspešen zagon in razvoj projekta **DishDash** potrebuješ:
+- **Flutter SDK** 
+- **Dart SDK**
+- **Supabase račun** (v primeru, da želiš imeti svojo podatkovno bazo)
+- **Git** (za upravljanje verzij)
+- **Android Studio** ali **VS Code** (za razvojno okolje)
+- **Android emulator** ali **Fizično napravo**
 
-### ▶️ Zagon aplikacije
+### 🛠️ Namestitev in nastavitev
+1. **Kloniraj repozitorij:**
+   ```bash
+   git clone https://github.com/BenjaminJeran/dish_dash.git
+   cd dishdash
+   ```
+2. **Namesti odvisnosti:**
+   ```bash
+   flutter pub get
+   ```
+3. **Nastavi Supabase:**
+   - Ustvari nov projekt na [Supabase](https://supabase.com/) ali uporabi obstoječega
+   - V datoteki `.env` nastavi `SUPABASE_URL` in `SUPABASE_KEY` ali uporabi obstoječega
+4. **Zaženi aplikacijo:**
+   ```bash
+   flutter run
+   ```
 
-```bash
-flutter pub get
-flutter run
-```
-
----
+### 📝 Dodatne informacije
+- Za reševanje težav glede Flutterja obišči [Flutter Docs](https://docs.flutter.dev/).
+- Za pomoč pri Supabase obišči [Supabase Docs](https://supabase.com/docs).
 
 ## 💡 Ideja in koncept
 
@@ -69,16 +89,21 @@ Večina obstoječih aplikacij ni dovolj intuitivnih in ne ponuja naprednih funkc
 - 🌍 Globalni gurmani
 
 ---
-
 ## 🧩 Ključne funkcionalnosti
 
-- **🍲 Recepti**: Hiter vnos sestavin, postopkov in slik
-- **🌐 Skupnost**: Komentarji, ocene, deljenje
-- **🛍️ Nakupovalni seznam**: Samodejna organizacija sestavin
-- **🤖 Priporočila**: Na podlagi okusov in navad
-- **🏁 Izzivi**: Povezovanje z drugimi skozi tekmovanja
+**DishDash** ponuja naslednje funkcionalnosti
 
----
+1. **🔑 Prijava** – Uporabniki se lahko prijavljajo v svoj račun z e-naslovom in geslom.
+2. **📝 Registracija** – Enostaven postopek za ustvarjanje novega uporabniškega računa z osnovnimi podatki.
+3. **❤️ Všečkanje** – Možnost označbe receptov kot priljubljenih za hitrejši dostop kasneje.
+4. **📖 Pregled receptov** – Raziskovanje receptov po kategorijah, oceni ali popularnosti.
+5. **➕ Dodajanje/✏️ Urejanje/❌ Brisanje receptov** – Uporabniki lahko ustvarjajo, spreminjajo in odstranjujejo lastne recepte.
+6. **🏆 Kuharski izzivi** – Sodelovanje v tematskih izzivih 
+7. **⚙️ Nastavljanje preferenc** – Personalizacija priporočil glede na okuse, prehranske navade in alergene.
+8. **🔍 Filtriranje receptov** – Iskanje receptov po preferencah, tipu hrane
+9. **👤 Urejanje uporabniškega profila** – Spreminjanje osebnih podatkov, profilske slike in nastavitev računa.
+10. **💬 Komentiranje receptov** – Pisanje in branje komentarjev pod recepti za izmenjavo mnenj in nasvetov.
+
 
 ## 📚 Uporabni viri
 
