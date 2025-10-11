@@ -37,7 +37,7 @@ Za uspešen zagon in razvoj projekta **DishDash** potrebuješ:
    ```
 3. **Nastavi Supabase:**
    - Ustvari nov projekt na [Supabase](https://supabase.com/) ali uporabi obstoječega
-   - V datoteki `.env` nastavi `SUPABASE_URL` in `SUPABASE_KEY` ali uporabi obstoječega
+   - V datoteki `.env` nastavi `SUPABASE_URL` in `ANON_KEY` ali uporabi obstoječega
 4. **Zaženi aplikacijo:**
    ```bash
    flutter run
