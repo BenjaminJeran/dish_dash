@@ -39,6 +39,7 @@
 | 5. Nareditev fotografije   | Fotografija se shrani v formo                          |
 | 6. Klik na dodaj recept    | Prikaže se zaslon za raziskovanje receptov             |
 | 7. Klik na zavihek recepti | Prikaže se zavihek z recepti ter na novo dodan recept. |
+| 8. Klik na recept          | Prikaže se  stran s podrobnosti recepta                |
 
 ## Pričakovani rezultat 
 
@@ -121,3 +122,13 @@
 
 ---
 
+| Funkcionalnost / Testni primer              | TC-01 (Prijava) | TC-02 (Ustvarjanje recepta) | TC-03 (Všečkanje recepta) | TC-04 (Dodajanje v nakupovalni seznam) | TC-05 (Izbris recepta) |
+| :------------------------------------------ | :-------------- | :-------------------------- | :------------------------ | :------------------------------------- | :--------------------- |
+| **Prijava uporabnika**                      | X               |                             |                           |                                        |                        |
+| **Ustvarjanje novega recepta**              |                 | X                           |                           |                                        |                        |
+| **Pregled vseh receptov**                   |                 | X                           |                           |                                        |                        |
+| **Pregled podrobnega recepta**              |                 | X                           | X                         | X                                      |                        |
+| **Všečkanje/Shranjevanje recepta**          |                 |                             | X                         |                                        |                        |
+| **Dodajanje sestavin v nakupovalni seznam** |                 |                             |                           | X                                      |                        |
+| **Pregled nakupovalnega seznama**           |                 |                             |                           | X                                      |                        |
+| **Brisanje recepta**                        |                 |                             |                           |                                        | X                      |
