@@ -104,6 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
                 TextFormField(
+                  key: const Key('loginEmailField'),
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
@@ -117,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
+                  key: const Key('loginPasswordField'),
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
@@ -157,6 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
+                    key: const Key('registerButton'),
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -169,6 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
+                  key: const Key('loginButton'),
                   onPressed: _isLoading ? null : _login,
                   child:
                       _isLoading
