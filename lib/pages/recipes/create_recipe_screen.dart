@@ -76,11 +76,13 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          key: const Key('imageSourceDialog'), // Key for the dialog
           title: const Text('Izberi vir slike'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               ListTile(
+                key: const Key('galleryListTile'), // Key for Gallery option
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Galerija'),
                 onTap: () {
@@ -89,6 +91,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 },
               ),
               ListTile(
+                key: const Key('cameraListTile'), // Key for Camera option
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Kamera'),
                 onTap: () {
@@ -98,6 +101,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               ),
               if (_selectedImage != null)
                 ListTile(
+                  key: const Key(
+                    'removeImageTile',
+                  ), // Key for Remove Image option
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
                   title: const Text(
                     'Odstrani sliko',
@@ -305,17 +311,17 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       await supabase.from('recipes').insert(recipeData);
 
       print('Submitting Recipe:');
-      print('   Name: $recipeName');
-      print('   Description: $description');
-      print('   Ingredients: $ingredientsList');
-      print('   Instructions: $instructionsList');
-      print('   Cooking Time: $cookingTime');
-      print('   Servings: $servings');
-      print('   Category: $category');
+      print('    Name: $recipeName');
+      print('    Description: $description');
+      print('    Ingredients: $ingredientsList');
+      print('    Instructions: $instructionsList');
+      print('    Cooking Time: $cookingTime');
+      print('    Servings: $servings');
+      print('    Category: $category');
       print(
-        '   Image URL: ${imageUrl ?? 'No image selected, using default if set in DB'}',
+        '    Image URL: ${imageUrl ?? 'No image selected, using default if set in DB'}',
       );
-      print('   User ID: $userId');
+      print('    User ID: $userId');
 
       if (mounted) {
         ToastManager.showSuccessToast(context, 'Recept uspešno dodan!');
@@ -347,7 +353,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       if (mounted) {
         Navigator.pop(context, true);
       }
-
     } on PostgrestException catch (e) {
       print('Supabase Database Error: ${e.message}');
       if (mounted) {
@@ -377,6 +382,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     TextInputType keyboardType = TextInputType.text,
     int? maxLines = 1,
     int? minLines = 1,
+    required Key key, // Added required Key parameter
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -384,6 +390,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: TextField(
+        key: key, // Using the passed key
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
@@ -407,6 +414,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
+          key: const Key('backButton'), // Key for back button
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
@@ -415,6 +423,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         title: Center(child: Image.asset('assets/logo.png', height: 80)),
         actions: [
           IconButton(
+            key: const Key('profileButton'), // Key for profile icon
             icon: const Icon(Icons.person),
             onPressed: () {
               print('Profile icon pressed');
@@ -440,12 +449,14 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 30),
             _buildInputField(
+              key: const Key('recipeNameInput'), // Key added
               controller: _recipeNameController,
               hintText: 'Ime recepta',
               keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 20),
             _buildInputField(
+              key: const Key('descriptionInput'), // Key added
               controller: _descriptionController,
               hintText: 'Kratek opis recepta',
               keyboardType: TextInputType.multiline,
@@ -463,6 +474,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 10),
             Column(
+              key: const Key('ingredientsList'), // Key for the ingredients list
               children:
                   _ingredientControllers.asMap().entries.map((entry) {
                     int idx = entry.key;
@@ -470,15 +482,24 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 10.0),
                       child: Row(
+                        key: Key(
+                          'ingredientRow_$idx',
+                        ), // Key for each ingredient row
                         children: [
                           Expanded(
                             child: _buildInputField(
+                              key: Key(
+                                'ingredientInput_$idx',
+                              ), // Key added for ingredient input
                               controller: controller,
                               hintText: 'Sestavina ${idx + 1}',
                               keyboardType: TextInputType.text,
                             ),
                           ),
                           IconButton(
+                            key: Key(
+                              'removeIngredientButton_$idx',
+                            ), // Key for remove ingredient button
                             icon: Icon(
                               Icons.remove_circle_outline,
                               color: AppColors.tomatoRed,
@@ -493,6 +514,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
+                key: const Key(
+                  'addIngredientButton',
+                ), // Key for add ingredient button
                 onPressed: _addIngredientField,
                 icon: Icon(Icons.add, color: AppColors.leafGreen),
                 label: Text(
@@ -512,6 +536,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             const SizedBox(height: 10),
             Column(
+              key: const Key(
+                'instructionsList',
+              ), // Key for the instructions list
               children:
                   _instructionControllers.asMap().entries.map((entry) {
                     int idx = entry.key;
@@ -519,9 +546,15 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 10.0),
                       child: Row(
+                        key: Key(
+                          'instructionRow_$idx',
+                        ), // Key for each instruction row
                         children: [
                           Expanded(
                             child: _buildInputField(
+                              key: Key(
+                                'instructionInput_$idx',
+                              ), // Key added for instruction input
                               controller: controller,
                               hintText: 'Korak ${idx + 1}',
                               keyboardType: TextInputType.multiline,
@@ -530,6 +563,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                             ),
                           ),
                           IconButton(
+                            key: Key(
+                              'removeInstructionButton_$idx',
+                            ), // Key for remove instruction button
                             icon: Icon(
                               Icons.remove_circle_outline,
                               color: AppColors.tomatoRed,
@@ -544,6 +580,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
+                key: const Key(
+                  'addInstructionButton',
+                ), // Key for add instruction button
                 onPressed: _addInstructionField,
                 icon: Icon(Icons.add, color: AppColors.leafGreen),
                 label: Text(
@@ -557,6 +596,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               children: [
                 Expanded(
                   child: _buildInputField(
+                    key: const Key('cookingTimeInput'), // Key added
                     controller: _cookingTimeController,
                     hintText: 'Čas kuhanja (npr. 30 minut)',
                     keyboardType: TextInputType.text,
@@ -566,6 +606,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _buildInputField(
+                    key: const Key('servingsInput'), // Key added
                     controller: _servingsController,
                     hintText: 'Št. porcij (npr. 4 osebe)',
                     keyboardType: TextInputType.text,
@@ -583,6 +624,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   child: Column(
                     children: [
                       Container(
+                        key: const Key('cuisineDropdownContainer'), // Key added
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 4,
@@ -593,6 +635,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
+                            key: const Key('cuisineDropdown'), // Key added
                             value: _selectedCuisine,
                             hint: Text(
                               'Kuhinja',
@@ -617,6 +660,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                                   String value,
                                 ) {
                                   return DropdownMenuItem<String>(
+                                    key: Key(
+                                      'cuisineItem_$value',
+                                    ), // Key added for dropdown items
                                     value: value,
                                     child: Text(value),
                                   );
@@ -626,6 +672,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                       ),
                       const SizedBox(height: 10),
                       Container(
+                        key: const Key(
+                          'categoryDropdownContainer',
+                        ), // Key added
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 4,
@@ -636,6 +685,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
+                            key: const Key('categoryDropdown'), // Key added
                             value: _selectedCategory,
                             hint: Text(
                               'Kategorija',
@@ -660,6 +710,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                                   String value,
                                 ) {
                                   return DropdownMenuItem<String>(
+                                    key: Key(
+                                      'categoryItem_$value',
+                                    ), // Key added for dropdown items
                                     value: value,
                                     child: Text(value),
                                   );
@@ -674,6 +727,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 Expanded(
                   flex: 1,
                   child: ElevatedButton.icon(
+                    key: const Key(
+                      'imagePickButton',
+                    ), // Key changed to a more descriptive name
                     onPressed: _pickImage,
                     icon: Icon(Icons.upload_file, color: AppColors.charcoal),
                     label: Text(
@@ -701,6 +757,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
             ),
             if (_selectedImage != null)
               Padding(
+                key: const Key(
+                  'selectedImagePreview',
+                ), // Key added for image preview
                 padding: const EdgeInsets.only(top: 20.0),
                 child: Center(
                   child: ClipRRect(
@@ -716,6 +775,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
               ),
             const SizedBox(height: 30),
             ElevatedButton(
+              key: const Key('saveRecipeButton'), // Key added
               onPressed: _isLoading ? null : _addRecipe,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
@@ -727,13 +787,13 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                   _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                          'Dodaj recept',
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        'Dodaj recept',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
             ),
           ],
         ),

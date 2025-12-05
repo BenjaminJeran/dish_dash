@@ -182,6 +182,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
           width: 70.0,
           height: 70.0,
           child: FloatingActionButton(
+            key: const Key('createRecipeFAB'),
             onPressed: () {
               Navigator.push(
                 context,
