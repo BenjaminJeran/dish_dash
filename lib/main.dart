@@ -7,22 +7,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dish_dash/pages/auth/new_password.dart';
 
 Future<void> main() async {
-
-
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await dotenv.load(fileName: ".env"); 
+    await dotenv.load(fileName: ".env");
   } catch (e) {
-    throw Exception('Error loading .env file: $e'); 
+    throw Exception('Error loading .env file: $e');
   }
 
   final String apiKey = dotenv.env['ANON_KEY'] ?? 'default_key';
 
   await Supabase.initialize(
     url: 'https://hpeuvvghrjvtikkgdnql.supabase.co',
-    anonKey:
-        apiKey
+    anonKey: apiKey,
   );
   runApp(const MyApp());
 }
@@ -39,7 +36,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) {

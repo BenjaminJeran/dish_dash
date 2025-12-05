@@ -9,39 +9,33 @@ void main() {
 
   group('Login Flow Test', () {
     setUp(() async {
-      // Clear SharedPreferences and set onboarding as seen to skip it
+      // Da skippamno onboarding zaslone
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasSeenOnboarding', true);
     });
 
-    testWidgets('Uporabnik se uspesno prijavi v aplikacijo', (
+    testWidgets('Uporabnik se uspesno prijavi v aplikacijo in ustvari recept', (
       WidgetTester tester,
     ) async {
       app.main();
 
-      // Wait for splash screen (2 seconds delay in splash_screen.dart)
+      // Počakam da bo konc splashscreena
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Verify we're on the login screen
       expect(find.byKey(const Key('loginEmailField')), findsOneWidget);
 
-      // 1. Find the email field and enter text
       final emailField = find.byKey(const Key('loginEmailField'));
       await tester.enterText(emailField, 'benjamin.jeran@gmail.com');
       await tester.pumpAndSettle();
 
-      // 2. Find the password field and enter text
       final passwordField = find.byKey(const Key('loginPasswordField'));
       await tester.enterText(passwordField, 'test123!');
       await tester.pumpAndSettle();
 
-      // 3. Find the login button and tap it
       final loginButton = find.byKey(const Key('loginButton'));
       await tester.tap(loginButton);
 
-      // 4. Wait for the app to navigate/update UI after login attempt
-      // Use longer timeout for authentication
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       final fabButton = find.byKey(const Key('createRecipeFAB'));
@@ -50,7 +44,106 @@ void main() {
       // Čakam na odpiranje zaslona za ustvarjanje recepta
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      // 5. Verification - Check for success or return to main screen
+      // Preverimo, da smo na pravem zaslonu
+      expect(find.byKey(const Key('recipeNameInput')), findsOneWidget);
+
+      // 6. Vnos naslova
+      final titleField = find.byKey(const Key('recipeNameInput'));
+      await tester.enterText(titleField, 'Testni Recept - IT');
+      await tester.pumpAndSettle();
+
+      final descriptionField = find.byKey(const Key('descriptionInput'));
+      await tester.enterText(
+        descriptionField,
+        'To je odličen recept za integracijsko testiranje.',
+      );
+      await tester.pumpAndSettle();
+
+      // 8. Dodajanje sestavine
+      final firstIngredientField = find.byKey(const Key('ingredientInput_0'));
+      await tester.enterText(firstIngredientField, 'Sol - 1 žlička');
+      await tester.pumpAndSettle();
+
+      // Dodaj drugo sestavino
+      final addIngredientButton = find.byKey(const Key('addIngredientButton'));
+      await tester.tap(addIngredientButton);
+      await tester.pumpAndSettle();
+
+      // Vnos v drugo sestavino
+      final secondIngredientField = find.byKey(const Key('ingredientInput_1'));
+      await tester.enterText(secondIngredientField, 'Poper - po okusu');
+      await tester.pumpAndSettle();
+
+      // 9. Dodajanje navodil
+      final firstInstructionField = find.byKey(const Key('instructionInput_0'));
+      await tester.enterText(firstInstructionField, 'Zmešaj vse sestavine.');
+      await tester.pumpAndSettle();
+
+      // Dodaj drugo navodilo
+      final addInstructionButton = find.byKey(
+        const Key('addInstructionButton'),
+      );
+      await tester.tap(addInstructionButton);
+      await tester.pumpAndSettle();
+
+      // Vnos v drugo navodilo
+      final secondInstructionField = find.byKey(
+        const Key('instructionInput_1'),
+      );
+      await tester.enterText(secondInstructionField, 'Kuhaj 30 minut.');
+      await tester.pumpAndSettle();
+
+      // Scrollamo navzdol, da so vidna polja za čas in porcije
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -300),
+      );
+      await tester.pumpAndSettle();
+
+      // 11. Vnos časa priprave
+      final timeField = find.byKey(const Key('cookingTimeInput'));
+      await tester.ensureVisible(timeField);
+      await tester.pumpAndSettle();
+      await tester.enterText(timeField, '30 minut');
+      await tester.pumpAndSettle();
+
+      // 12. Vnos števila porcij
+      final servingsField = find.byKey(const Key('servingsInput'));
+      await tester.ensureVisible(servingsField);
+      await tester.pumpAndSettle();
+      await tester.enterText(servingsField, '4 osebe');
+      await tester.pumpAndSettle();
+
+      // 14. Izbira kuhinje
+      final cuisineDropdown = find.byKey(const Key('cuisineDropdown'));
+      await tester.ensureVisible(cuisineDropdown);
+      await tester.pumpAndSettle();
+      await tester.tap(cuisineDropdown);
+      await tester.pumpAndSettle();
+
+      // Izberi prvo možnost (Italijanska)
+      await tester.tap(find.text('Italijanska').last);
+      await tester.pumpAndSettle();
+
+      // 15. Izbira kategorije
+      final categoryDropdown = find.byKey(const Key('categoryDropdown'));
+      await tester.ensureVisible(categoryDropdown);
+      await tester.pumpAndSettle();
+      await tester.tap(categoryDropdown);
+      await tester.pumpAndSettle();
+
+      // Izberi prvo možnost (Zajtrk)
+      await tester.tap(find.text('Zajtrk').last);
+      await tester.pumpAndSettle();
+
+      // 17. Shranjevanje celotnega recepta
+      final saveRecipeButton = find.byKey(const Key('saveRecipeButton'));
+      await tester.ensureVisible(saveRecipeButton);
+      await tester.pumpAndSettle();
+      await tester.tap(saveRecipeButton);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      // Preverimo, da smo nazaj na domačem zaslonu
       expect(find.text('Priporočeni recepti'), findsOneWidget);
     });
   });
