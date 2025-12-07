@@ -145,6 +145,47 @@ void main() {
 
       // Preverimo, da smo nazaj na domačem zaslonu
       expect(find.text('Priporočeni recepti'), findsOneWidget);
+
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      final recipe_tab = find.byKey(const Key('nav_Recepti'));
+      await tester.ensureVisible(recipe_tab);
+      await tester.pumpAndSettle();
+      await tester.tap(recipe_tab);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+      
+      // Preverimo, da je nov recept prikazan na seznamu receptov
+      expect(find.text('Testni Recept - IT'), findsOneWidget);
+
+      final recipeTitleFinder = find.text('Testni Recept - IT');
+      
+      // Find the Dismissible parent widget containing the recipe
+      final recipeItem = find.ancestor(
+        of: recipeTitleFinder,
+        matching: find.byType(Dismissible),
+      );
+
+      // Simuliraj poteg "od konca do začetka" (endToStart) za brisanje
+      await tester.drag(
+        recipeItem,
+        const Offset(-400.0, 0.0),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      // Preveri, da se je prikazalo potrditveno pogovorno okno (AlertDialog)
+      expect(find.text('Potrdi izbris'), findsOneWidget);
+
+      // Tapni gumb 'Izbriši' v potrditvenem pogovornem oknu
+      final deleteButton = find.text('Izbriši');
+      await tester.tap(deleteButton);
+      
+      // Počakaj, da se dialog zapre in izvede dejansko brisanje/osveževanje
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+
+      // Preveri, da recept ni več prikazan na seznamu
+      expect(recipeTitleFinder, findsNothing);
+
+
     });
   });
 }

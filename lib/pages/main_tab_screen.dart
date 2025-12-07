@@ -204,6 +204,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
   Widget _buildNavItem(int index, IconData icon, String label) {
     bool isSelected = _selectedIndex == index;
     return Expanded(
+      key: Key('nav_$label'),
       child: InkWell(
         onTap: () => _onItemTapped(index),
         customBorder: const CircleBorder(),

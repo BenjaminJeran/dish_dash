@@ -324,7 +324,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       print('    User ID: $userId');
 
       if (mounted) {
-        ToastManager.showSuccessToast(context, 'Recept uspešno dodan!');
+        //ToastManager.showSuccessToast(context, 'Recept uspešno dodan!');
       }
 
       _recipeNameController.clear();
